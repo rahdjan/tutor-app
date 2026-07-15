@@ -1,0 +1,12 @@
+// Схема данных платформы для репетиторов.
+// Модели (User, Student, Task, Worksheet и т.д.) появятся в Фазе 3 по брифу.
+// Подключение к БД настраивается через DATABASE_URL в .env (см. prisma.config.ts).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
