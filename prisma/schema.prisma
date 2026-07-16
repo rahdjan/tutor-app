@@ -50,6 +50,7 @@ model User {
 
   // Контент и записи репетитора
   studentCards Student[]  @relation("TutorStudentCards")
+  customTopics Topic[]    @relation("TutorTopics")
   tasks        Task[]
   worksheets   Worksheet[]
   assignments  Assignment[]
@@ -196,7 +197,8 @@ model Student {
 }
 
 // Тема кодификатора ФИПИ или произвольная тема.
-// Общий справочник (без tutorId): сидится из кодификатора, дерево через parentId.
+// tutorId = null — общий кодификатор (сид), виден всем репетиторам.
+// tutorId заполнен — личная тема репетитора, видна только ему.
 model Topic {
   id        String  @id @default(cuid())
   title     String
@@ -206,6 +208,9 @@ model Topic {
   fipiCode  String? // код по кодификатору ФИПИ, например «3.1»
   order     Int? // порядок показа внутри экзамена
 
+  tutorId String?
+  tutor   User?   @relation("TutorTopics", fields: [tutorId], references: [id], onDelete: Cascade)
+
   parentId String?
   parent   Topic?  @relation("TopicTree", fields: [parentId], references: [id], onDelete: SetNull)
   children Topic[] @relation("TopicTree")
@@ -214,6 +219,7 @@ model Topic {
   planItems PlanItem[]
 
   @@index([exam, kimNumber])
+  @@index([tutorId])
   @@map("topic")
 }
 

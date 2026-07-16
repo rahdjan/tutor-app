@@ -43,9 +43,17 @@ export default async function StudentCardPage({
       <Link href="/tutor" className="text-sm font-semibold underline">
         ← К списку учеников
       </Link>
-      <h1 className="mt-4 mb-6 text-3xl font-extrabold tracking-tight">
-        {student.name}
-      </h1>
+      <div className="mt-4 mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-extrabold tracking-tight">
+          {student.name}
+        </h1>
+        <Link
+          href={`/tutor/students/${student.id}/plan`}
+          className="btn-pill bg-butter"
+        >
+          Программа подготовки →
+        </Link>
+      </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <section className="window-card p-6">
