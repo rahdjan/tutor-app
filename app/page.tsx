@@ -80,10 +80,10 @@ export default function Home() {
           <span className="font-serif italic font-medium">.Платформа</span>
         </div>
         <nav className="flex items-center gap-3">
-          <a href="#" className="btn-pill bg-paper hidden sm:inline-flex">
+          <a href="/login" className="btn-pill bg-paper hidden sm:inline-flex">
             Войти
           </a>
-          <a href="#" className="btn-pill bg-butter">
+          <a href="/register" className="btn-pill bg-butter">
             Начать
           </a>
         </nav>
@@ -107,10 +107,10 @@ export default function Home() {
             расписание и оплаты — вместо папок, чатов и заметок.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#" className="btn-pill bg-butter">
+            <a href="/register" className="btn-pill bg-butter">
               Я репетитор →
             </a>
-            <a href="#" className="btn-pill bg-paper">
+            <a href="/login" className="btn-pill bg-paper">
               Я ученик
             </a>
           </div>
@@ -231,7 +231,7 @@ export default function Home() {
               Платформа для вас, если вы…
             </h2>
             <a
-              href="#"
+              href="/register"
               className="btn-pill mt-8 bg-butter text-ink shadow-[3px_3px_0_0_#f1eee8] hover:shadow-[1px_1px_0_0_#f1eee8]"
             >
               Начать →

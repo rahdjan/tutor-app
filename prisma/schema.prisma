@@ -1,5 +1,7 @@
 // Схема данных платформы для репетиторов.
-// Модели (User, Student, Task, Worksheet и т.д.) появятся в Фазе 3 по брифу.
+// User/Session/Account/Verification — таблицы, которые требует Better Auth (авторизация).
+// Invite — одноразовые приглашения учеников.
+// Доменные модели (Student, Task, Worksheet и т.д.) появятся в Фазе 3 по брифу.
 // Подключение к БД настраивается через DATABASE_URL в .env (см. prisma.config.ts).
 
 generator client {
@@ -9,4 +11,103 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  TUTOR
+  STUDENT
+}
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Роль и мультиарендность: у ученика заполнен tutorId — пригласивший репетитор.
+  role    Role    @default(TUTOR)
+  tutorId String?
+  tutor   User?   @relation("TutorStudents", fields: [tutorId], references: [id], onDelete: SetNull)
+  students User[] @relation("TutorStudents")
+
+  // Согласия на обработку персональных данных (см. /privacy).
+  consentAccepted       Boolean @default(false)
+  under16               Boolean @default(false)
+  parentConsentAccepted Boolean @default(false)
+
+  sessions Session[]
+  accounts Account[]
+  invites  Invite[]  @relation("TutorInvites")
+
+  @@index([tutorId])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// Одноразовое приглашение ученика: репетитор создаёт ссылку с кодом,
+// ученик регистрируется по ней и привязывается к этому репетитору.
+model Invite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  label     String? // для репетитора: кому отправил (например, «Маша, 9 класс»)
+  expiresAt DateTime
+  usedAt    DateTime?
+  usedById  String?
+  createdAt DateTime  @default(now())
+
+  tutorId String
+  tutor   User   @relation("TutorInvites", fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@map("invite")
 }

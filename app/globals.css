@@ -81,6 +81,29 @@ body {
     );
   }
 
+  /* Поле ввода в стиле дизайн-системы */
+  .input {
+    width: 100%;
+    border-radius: 0.65rem;
+    border: 1.5px solid var(--color-ink);
+    background: var(--color-paper);
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .input:focus {
+    outline: 2px solid var(--color-butter);
+    outline-offset: 1px;
+  }
+
+  /* Подпись к полю */
+  .field-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
   /* Мелкий надзаголовок-«ярлык» */
   .eyebrow {
     font-size: 0.72rem;
