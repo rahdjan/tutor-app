@@ -7,6 +7,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Node 24 запускает TypeScript напрямую; --env-file подтягивает DATABASE_URL
+    seed: "node --env-file=.env prisma/seed.ts",
   },
   datasource: {
     url: process.env["DATABASE_URL"],
