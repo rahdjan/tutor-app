@@ -125,6 +125,11 @@ model Invite {
   tutorId String
   tutor   User   @relation("TutorInvites", fields: [tutorId], references: [id], onDelete: Cascade)
 
+  // Карточка ученика, к которой привязано приглашение: после регистрации
+  // аккаунт нового пользователя присоединяется именно к этой карточке.
+  studentId String?
+  student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
   @@index([tutorId])
   @@map("invite")
 }
@@ -184,6 +189,7 @@ model Student {
   assignments Assignment[]
   lessons     Lesson[]
   payments    Payment[]
+  invites     Invite[]
 
   @@index([tutorId])
   @@map("student")

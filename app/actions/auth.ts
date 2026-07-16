@@ -2,16 +2,13 @@
 
 // Server actions авторизации: выполняются только на сервере,
 // формы вызывают их напрямую через <form action={...}>.
-import { randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { requireTutor } from "@/lib/access";
 
-export type FormState = { error?: string };
+export type FormState = { error?: string; ok?: boolean };
 
 /** Переводит ошибки Better Auth на русский. */
 function authErrorMessage(error: unknown): string {
@@ -109,9 +106,15 @@ export async function registerStudent(
     return { error: "Если тебе меньше 16 лет, нужно согласие родителя." };
   }
 
-  const invite = await prisma.invite.findUnique({ where: { code } });
+  const invite = await prisma.invite.findUnique({
+    where: { code },
+    include: { student: { select: { userId: true } } },
+  });
   if (!invite || invite.usedAt || invite.expiresAt < new Date()) {
     return { error: "Приглашение недействительно. Попросите у репетитора новую ссылку." };
+  }
+  if (invite.student?.userId) {
+    return { error: "К этой карточке уже привязан аккаунт. Попросите у репетитора новую ссылку." };
   }
 
   // «Забираем» приглашение атомарно: условие usedAt: null защищает от того,
@@ -145,13 +148,27 @@ export async function registerStudent(
   }
 
   // Привязываем нового ученика к репетитору из приглашения.
-  const student = await prisma.user.update({
+  const user = await prisma.user.update({
     where: { email },
     data: { role: "STUDENT", tutorId: invite.tutorId },
   });
+
+  // Аккаунт присоединяется к карточке ученика: либо к той, из которой
+  // репетитор создал приглашение, либо к новой (для старых общих ссылок).
+  if (invite.studentId) {
+    await prisma.student.update({
+      where: { id: invite.studentId },
+      data: { userId: user.id },
+    });
+  } else {
+    await prisma.student.create({
+      data: { name, tutorId: invite.tutorId, userId: user.id },
+    });
+  }
+
   await prisma.invite.update({
     where: { id: invite.id },
-    data: { usedById: student.id },
+    data: { usedById: user.id },
   });
 
   redirect("/student");
@@ -161,25 +178,4 @@ export async function registerStudent(
 export async function logout() {
   await auth.api.signOut({ headers: await headers() });
   redirect("/login");
-}
-
-/** Репетитор создаёт одноразовую ссылку-приглашение (действует 14 дней). */
-export async function createInvite(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const session = await requireTutor();
-  const label = String(formData.get("label") ?? "").trim() || null;
-
-  await prisma.invite.create({
-    data: {
-      code: randomBytes(9).toString("base64url"),
-      label,
-      tutorId: session.user.id,
-      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  revalidatePath("/tutor");
-  return {};
 }
