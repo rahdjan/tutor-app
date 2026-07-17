@@ -55,10 +55,18 @@ export async function saveAnswer(
     return { error: "Работа уже сдана — изменить ответы нельзя." };
   }
 
-  // Фото решения (для развёрнутых): в облачное хранилище, в БД — только ссылка
+  // Фото решения (для развёрнутых): в облачное хранилище, в БД — только ссылка.
+  // Vercel может создать токен с префиксом хранилища (XXX_READ_WRITE_TOKEN) —
+  // ищем по окончанию имени.
+  const blobToken =
+    process.env.BLOB_READ_WRITE_TOKEN ??
+    Object.entries(process.env).find(
+      ([key, value]) => key.endsWith("_READ_WRITE_TOKEN") && value,
+    )?.[1];
+
   let fileUrl: string | undefined;
   if (photo instanceof File && photo.size > 0) {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    if (!blobToken) {
       return { error: "Загрузка фото пока не настроена. Отправьте решение текстом." };
     }
     if (photo.size > 8 * 1024 * 1024) {
@@ -71,7 +79,7 @@ export async function saveAnswer(
     const blob = await put(
       `solutions/${assignment.id}/${taskId}-${Date.now()}.${ext}`,
       photo,
-      { access: "public" },
+      { access: "public", token: blobToken },
     );
     fileUrl = blob.url;
   }
