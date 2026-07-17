@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  experimental: {
+    serverActions: {
+      // PDF для ИИ-импорта может весить несколько мегабайт
+      bodySizeLimit: "8mb",
+    },
+  },
 };
 
 export default nextConfig;

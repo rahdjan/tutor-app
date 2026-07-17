@@ -66,6 +66,9 @@ export default async function TasksPage({
           <Link href="/tutor/tasks/new" className="btn-pill bg-butter">
             + Новая задача
           </Link>
+          <Link href="/tutor/tasks/ai-import" className="btn-pill bg-paper">
+            ✨ ИИ-импорт
+          </Link>
           <Link href="/tutor/tasks/import" className="btn-pill bg-paper">
             Импорт JSON
           </Link>
