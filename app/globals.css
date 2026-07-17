@@ -104,6 +104,13 @@ body {
     font-weight: 600;
   }
 
+  /* Скрыть элемент при печати */
+  @media print {
+    .print-hide {
+      display: none !important;
+    }
+  }
+
   /* Мелкий надзаголовок-«ярлык» */
   .eyebrow {
     font-size: 0.72rem;

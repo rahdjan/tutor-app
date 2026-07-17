@@ -23,6 +23,9 @@ export function DashboardHeader({
             <Link href="/tutor/tasks" className="hover:underline">
               Банк задач
             </Link>
+            <Link href="/tutor/worksheets" className="hover:underline">
+              Листы
+            </Link>
           </nav>
         )}
       </div>
