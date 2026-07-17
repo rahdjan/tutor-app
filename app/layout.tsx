@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Golos_Text, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 
 const golos = Golos_Text({
   variable: "--font-golos",

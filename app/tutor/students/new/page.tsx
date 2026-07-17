@@ -12,7 +12,7 @@ export default async function NewStudentPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 pb-16">
-      <DashboardHeader userName={session.user.name} />
+      <DashboardHeader userName={session.user.name} tutorNav />
 
       <Link href="/tutor" className="text-sm font-semibold underline">
         ← К списку учеников

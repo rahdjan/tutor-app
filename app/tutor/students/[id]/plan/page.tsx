@@ -49,7 +49,7 @@ export default async function PlanPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 pb-16">
-      <DashboardHeader userName={session.user.name} />
+      <DashboardHeader userName={session.user.name} tutorNav />
 
       <Link
         href={`/tutor/students/${student.id}`}
