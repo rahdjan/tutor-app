@@ -26,6 +26,9 @@ export function DashboardHeader({
             <Link href="/tutor/worksheets" className="hover:underline">
               Листы
             </Link>
+            <Link href="/tutor/review" className="hover:underline">
+              Проверка
+            </Link>
           </nav>
         )}
       </div>
