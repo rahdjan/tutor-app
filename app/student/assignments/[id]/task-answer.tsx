@@ -3,8 +3,39 @@
 // Ответ ученика на одну задачу.
 // SHORT: поле ответа + мгновенный результат автопроверки.
 // DETAILED: текст решения и/или фото — уходит репетитору.
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { saveAnswer, type AnswerState } from "@/app/actions/submissions";
+
+// Сжимаем фото в браузере: Vercel не пропускает запросы больше 4,5 МБ,
+// а фото с камеры обычно тяжелее. Для проверки решения хватит 2000 px.
+async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxSide = 2000;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.85),
+    );
+    if (!blob) return file;
+    // Если сжатие не помогло, а исходник и так мал — оставляем как есть
+    if (blob.size >= file.size && file.size < 3 * 1024 * 1024) return file;
+    return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {
+      type: "image/jpeg",
+    });
+  } catch {
+    // Формат не декодировался (редкий случай) — отправим оригинал
+    return file;
+  }
+}
 
 type Entry = {
   id: string;
@@ -32,6 +63,7 @@ export function TaskAnswer({
     saveAnswer,
     {},
   );
+  const [compressing, setCompressing] = useState(false);
 
   // Итог для показа: свежий результат из action или сохранённый из БД
   const shortResult =
@@ -124,14 +156,39 @@ export function TaskAnswer({
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-sm text-muted">
               📷 или фото решения:{" "}
-              <input type="file" name="photo" accept="image/*" className="text-xs" />
+              <input
+                type="file"
+                name="photo"
+                accept="image/*"
+                className="text-xs"
+                onChange={async (e) => {
+                  const input = e.currentTarget;
+                  const file = input.files?.[0];
+                  if (!file) return;
+                  setCompressing(true);
+                  try {
+                    const small = await compressImage(file);
+                    if (small !== file) {
+                      const dt = new DataTransfer();
+                      dt.items.add(small);
+                      input.files = dt.files;
+                    }
+                  } finally {
+                    setCompressing(false);
+                  }
+                }}
+              />
             </label>
             <button
               type="submit"
-              disabled={pending}
+              disabled={pending || compressing}
               className="btn-pill bg-butter px-4 py-1.5 text-sm disabled:opacity-60"
             >
-              {pending ? "Отправляем…" : "Сохранить решение"}
+              {compressing
+                ? "Сжимаем фото…"
+                : pending
+                  ? "Отправляем…"
+                  : "Сохранить решение"}
             </button>
           </div>
           {entry?.fileUrl && (
