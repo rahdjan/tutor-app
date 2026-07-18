@@ -176,6 +176,7 @@ model Student {
   goal      Goal      @default(OTHER)
   examDate  DateTime? // дата экзамена, если известна
   notes     String? // заметки репетитора
+  boardUrl  String? // ссылка на онлайн-доску (Miro и т.п.) — видна и ученику
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 

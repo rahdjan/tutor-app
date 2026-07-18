@@ -11,6 +11,7 @@ type StudentValues = {
   goal?: string;
   examDate?: Date | null;
   notes?: string | null;
+  boardUrl?: string | null;
 };
 
 // Форма карточки ученика: одна на добавление и редактирование.
@@ -95,6 +96,20 @@ export function StudentForm({
               : ""
           }
           className="input"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="boardUrl" className="field-label">
+          Ссылка на онлайн-доску
+        </label>
+        <input
+          id="boardUrl"
+          name="boardUrl"
+          type="url"
+          defaultValue={initial.boardUrl ?? ""}
+          className="input"
+          placeholder="https://miro.com/… — ученик увидит её в своём кабинете"
         />
       </div>
 

@@ -47,12 +47,26 @@ export default async function StudentCardPage({
         <h1 className="text-3xl font-extrabold tracking-tight">
           {student.name}
         </h1>
-        <Link
-          href={`/tutor/students/${student.id}/plan`}
-          className="btn-pill bg-butter"
-        >
-          Программа подготовки →
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/tutor/students/${student.id}/plan`}
+            className="btn-pill bg-butter"
+          >
+            Программа →
+          </Link>
+          <Link
+            href={`/tutor/students/${student.id}/lessons`}
+            className="btn-pill bg-paper"
+          >
+            Уроки
+          </Link>
+          <Link
+            href={`/tutor/students/${student.id}/stats`}
+            className="btn-pill bg-paper"
+          >
+            Статистика
+          </Link>
+        </div>
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-2">

@@ -20,7 +20,8 @@ function readStudentFields(formData: FormData) {
   const examDateRaw = String(formData.get("examDate") ?? "").trim();
   const examDate = examDateRaw ? new Date(examDateRaw) : null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
-  return { name, grade, goal, examDate, notes };
+  const boardUrl = String(formData.get("boardUrl") ?? "").trim() || null;
+  return { name, grade, goal, examDate, notes, boardUrl };
 }
 
 /** Добавление карточки ученика. */
@@ -33,6 +34,9 @@ export async function createStudent(
   if (!fields.name) return { error: "Укажите имя или метку ученика." };
   if (fields.grade !== null && (fields.grade < 1 || fields.grade > 11)) {
     return { error: "Класс — число от 1 до 11." };
+  }
+  if (fields.boardUrl && !/^https?:\/\//.test(fields.boardUrl)) {
+    return { error: "Ссылка на доску должна начинаться с http:// или https://" };
   }
 
   const student = await prisma.student.create({
@@ -52,6 +56,9 @@ export async function updateStudent(
   if (!fields.name) return { error: "Укажите имя или метку ученика." };
   if (fields.grade !== null && (fields.grade < 1 || fields.grade > 11)) {
     return { error: "Класс — число от 1 до 11." };
+  }
+  if (fields.boardUrl && !/^https?:\/\//.test(fields.boardUrl)) {
+    return { error: "Ссылка на доску должна начинаться с http:// или https://" };
   }
 
   // updateMany с фильтром по tutorId: чужая карточка просто не найдётся.

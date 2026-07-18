@@ -40,10 +40,20 @@ export default async function StudentPage() {
         Привет, {session.user.name}!
       </h1>
       {card?.tutor && (
-        <p className="mb-8 text-muted">
+        <p className="mb-4 text-muted">
           Твой репетитор —{" "}
           <span className="font-semibold text-ink">{card.tutor.name}</span>.
         </p>
+      )}
+      {card?.boardUrl && (
+        <a
+          href={card.boardUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-pill mb-8 inline-flex bg-butter"
+        >
+          🖊 Открыть нашу доску
+        </a>
       )}
 
       <p className="eyebrow mb-4 text-muted">• Мои задания</p>
