@@ -56,17 +56,18 @@ export async function saveAnswer(
   }
 
   // Фото решения (для развёрнутых): в облачное хранилище, в БД — только ссылка.
-  // Vercel может создать токен с префиксом хранилища (XXX_READ_WRITE_TOKEN) —
-  // ищем по окончанию имени.
+  // Доступ к Vercel Blob: либо классический токен (*_READ_WRITE_TOKEN — локально),
+  // либо автоматически по окружению Vercel (новые хранилища: есть BLOB_STORE_ID).
   const blobToken =
     process.env.BLOB_READ_WRITE_TOKEN ??
     Object.entries(process.env).find(
       ([key, value]) => key.endsWith("_READ_WRITE_TOKEN") && value,
     )?.[1];
+  const blobAvailable = Boolean(blobToken || process.env.BLOB_STORE_ID);
 
   let fileUrl: string | undefined;
   if (photo instanceof File && photo.size > 0) {
-    if (!blobToken) {
+    if (!blobAvailable) {
       return { error: "Загрузка фото пока не настроена. Отправьте решение текстом." };
     }
     if (photo.size > 8 * 1024 * 1024) {
@@ -76,12 +77,19 @@ export async function saveAnswer(
       return { error: "Можно загрузить только изображение." };
     }
     const ext = photo.type.split("/")[1] ?? "jpg";
-    const blob = await put(
-      `solutions/${assignment.id}/${taskId}-${Date.now()}.${ext}`,
-      photo,
-      { access: "public", token: blobToken },
-    );
-    fileUrl = blob.url;
+    try {
+      const blob = await put(
+        `solutions/${assignment.id}/${taskId}-${Date.now()}.${ext}`,
+        photo,
+        { access: "public", ...(blobToken ? { token: blobToken } : {}) },
+      );
+      fileUrl = blob.url;
+    } catch (error) {
+      console.error("Blob upload error:", error);
+      return {
+        error: "Не удалось загрузить фото. Попробуйте ещё раз или отправьте решение текстом.",
+      };
+    }
   }
 
   if (!answerText && !fileUrl) {
