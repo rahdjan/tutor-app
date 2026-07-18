@@ -383,13 +383,21 @@ model AnswerEntry {
 
 // ==================== Заготовки под Фазы 9–10 ====================
 
-// Урок (расписание появится в Фазе 10)
+// Статус урока: влияет на баланс пакета (проведённый списывает занятие)
+enum LessonStatus {
+  SCHEDULED
+  DONE
+  CANCELLED
+}
+
+// Урок
 model Lesson {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   scheduledAt DateTime
-  durationMin Int      @default(60)
+  durationMin Int          @default(60)
+  status      LessonStatus @default(SCHEDULED)
   note        String? // тема/конспект
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
 
   tutorId String
   tutor   User   @relation(fields: [tutorId], references: [id], onDelete: Cascade)

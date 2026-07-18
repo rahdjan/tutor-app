@@ -6,6 +6,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireTutor } from "@/lib/access";
 import type { FormState } from "@/app/actions/auth";
+import type { LessonStatus } from "@/app/generated/prisma/enums";
+
+const LESSON_STATUSES = ["SCHEDULED", "DONE", "CANCELLED"] as const;
 
 function readLessonFields(formData: FormData) {
   const dateRaw = String(formData.get("scheduledAt") ?? "").trim();
@@ -16,7 +19,11 @@ function readLessonFields(formData: FormData) {
       ? durationRaw
       : 60;
   const note = String(formData.get("note") ?? "").trim() || null;
-  return { scheduledAt, durationMin, note };
+  const statusRaw = String(formData.get("status") ?? "SCHEDULED");
+  const status = (LESSON_STATUSES as readonly string[]).includes(statusRaw)
+    ? (statusRaw as LessonStatus)
+    : "SCHEDULED";
+  return { scheduledAt, durationMin, note, status };
 }
 
 async function ownStudent(studentId: string, tutorId: string) {
@@ -43,6 +50,7 @@ export async function createLesson(
       scheduledAt: fields.scheduledAt,
       durationMin: fields.durationMin,
       note: fields.note,
+      status: fields.status,
     },
   });
   revalidatePath(`/tutor/students/${studentId}/lessons`);
@@ -66,6 +74,7 @@ export async function updateLesson(
       scheduledAt: fields.scheduledAt,
       durationMin: fields.durationMin,
       note: fields.note,
+      status: fields.status,
     },
   });
   if (updated.count === 0) return { error: "Урок не найден." };

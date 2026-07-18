@@ -61,6 +61,7 @@ export default async function LessonsPage({
                   scheduledAt: l.scheduledAt.toISOString(),
                   durationMin: l.durationMin,
                   note: l.note,
+                  status: l.status,
                 }}
               />
             ))}
@@ -82,6 +83,7 @@ export default async function LessonsPage({
                   scheduledAt: l.scheduledAt.toISOString(),
                   durationMin: l.durationMin,
                   note: l.note,
+                  status: l.status,
                 }}
               />
             ))}

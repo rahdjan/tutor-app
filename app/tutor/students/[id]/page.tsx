@@ -66,6 +66,12 @@ export default async function StudentCardPage({
           >
             Статистика
           </Link>
+          <Link
+            href={`/tutor/students/${student.id}/payments`}
+            className="btn-pill bg-paper"
+          >
+            Оплаты
+          </Link>
         </div>
       </div>
 

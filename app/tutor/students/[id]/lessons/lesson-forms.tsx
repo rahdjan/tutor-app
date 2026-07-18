@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import type { FormState } from "@/app/actions/auth";
 import { createLesson, deleteLesson, updateLesson } from "@/app/actions/lessons";
+import { LESSON_STATUS_LABELS } from "@/lib/labels";
+import type { LessonStatus } from "@/app/generated/prisma/enums";
 
 function toLocalInputValue(iso: string): string {
   const d = new Date(iso);
@@ -45,7 +47,13 @@ export function LessonForm({ studentId }: { studentId: string }) {
 export function LessonRow({
   lesson,
 }: {
-  lesson: { id: string; scheduledAt: string; durationMin: number; note: string | null };
+  lesson: {
+    id: string;
+    scheduledAt: string;
+    durationMin: number;
+    note: string | null;
+    status: LessonStatus;
+  };
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
     updateLesson,
@@ -70,6 +78,16 @@ export function LessonRow({
         <div className="min-w-52 flex-1">
           <label className="field-label">Тема / конспект</label>
           <input name="note" defaultValue={lesson.note ?? ""} className="input" />
+        </div>
+        <div>
+          <label className="field-label">Статус</label>
+          <select name="status" defaultValue={lesson.status} className="input">
+            {(Object.keys(LESSON_STATUS_LABELS) as LessonStatus[]).map((st) => (
+              <option key={st} value={st}>
+                {LESSON_STATUS_LABELS[st]}
+              </option>
+            ))}
+          </select>
         </div>
         <button type="submit" disabled={pending}
           className="btn-pill bg-paper px-4 py-1.5 text-sm disabled:opacity-60">
