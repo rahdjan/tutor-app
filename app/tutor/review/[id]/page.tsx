@@ -100,12 +100,12 @@ export default async function ReviewPage({
                     )}
                     {entry.fileUrl && (
                       <div>
-                        <a href={entry.fileUrl} target="_blank" className="underline">
+                        <a href={`/api/solution-photo/${entry.id}`} target="_blank" className="underline">
                           📷 Открыть фото решения
                         </a>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={entry.fileUrl}
+                          src={`/api/solution-photo/${entry.id}`}
                           alt="Фото решения ученика"
                           className="mt-2 max-h-96 rounded-lg border-[1.5px] border-ink/20"
                         />

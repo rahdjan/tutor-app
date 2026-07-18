@@ -4,7 +4,7 @@
 // Изоляция: ученик — только свои задания (через карточку по userId),
 // репетитор — только работы своих учеников (через tutorId).
 import { revalidatePath } from "next/cache";
-import { put } from "@vercel/blob";
+import { blobConfigured, uploadSolutionPhoto } from "@/lib/blob";
 import { prisma } from "@/lib/prisma";
 import { requireStudent, requireTutor } from "@/lib/access";
 import { checkShortAnswer } from "@/lib/answers";
@@ -55,19 +55,11 @@ export async function saveAnswer(
     return { error: "Работа уже сдана — изменить ответы нельзя." };
   }
 
-  // Фото решения (для развёрнутых): в облачное хранилище, в БД — только ссылка.
-  // Доступ к Vercel Blob: либо классический токен (*_READ_WRITE_TOKEN — локально),
-  // либо автоматически по окружению Vercel (новые хранилища: есть BLOB_STORE_ID).
-  const blobToken =
-    process.env.BLOB_READ_WRITE_TOKEN ??
-    Object.entries(process.env).find(
-      ([key, value]) => key.endsWith("_READ_WRITE_TOKEN") && value,
-    )?.[1];
-  const blobAvailable = Boolean(blobToken || process.env.BLOB_STORE_ID);
-
+  // Фото решения (для развёрнутых): в приватное облачное хранилище,
+  // в БД — только служебная ссылка. Отдаём фото через наш сервер с проверкой прав.
   let fileUrl: string | undefined;
   if (photo instanceof File && photo.size > 0) {
-    if (!blobAvailable) {
+    if (!blobConfigured()) {
       return { error: "Загрузка фото пока не настроена. Отправьте решение текстом." };
     }
     if (photo.size > 8 * 1024 * 1024) {
@@ -78,12 +70,10 @@ export async function saveAnswer(
     }
     const ext = photo.type.split("/")[1] ?? "jpg";
     try {
-      const blob = await put(
+      fileUrl = await uploadSolutionPhoto(
         `solutions/${assignment.id}/${taskId}-${Date.now()}.${ext}`,
         photo,
-        { access: "public", ...(blobToken ? { token: blobToken } : {}) },
       );
-      fileUrl = blob.url;
     } catch (error) {
       console.error("Blob upload error:", error);
       return {

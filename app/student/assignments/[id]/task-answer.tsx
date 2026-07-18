@@ -7,6 +7,7 @@ import { useActionState } from "react";
 import { saveAnswer, type AnswerState } from "@/app/actions/submissions";
 
 type Entry = {
+  id: string;
   answerText: string | null;
   fileUrl: string | null;
   autoScore: number | null;
@@ -52,7 +53,7 @@ export function TaskAnswer({
             )}
             {entry.fileUrl && (
               <p>
-                <a href={entry.fileUrl} target="_blank" className="underline">
+                <a href={`/api/solution-photo/${entry.id}`} target="_blank" className="underline">
                   📷 Фото решения
                 </a>
               </p>
@@ -135,7 +136,7 @@ export function TaskAnswer({
           </div>
           {entry?.fileUrl && (
             <p className="text-xs">
-              <a href={entry.fileUrl} target="_blank" className="underline">
+              <a href={`/api/solution-photo/${entry.id}`} target="_blank" className="underline">
                 Загруженное фото
               </a>
             </p>

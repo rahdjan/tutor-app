@@ -106,6 +106,7 @@ export default async function AssignmentPage({
                 entry={
                   entry
                     ? {
+                        id: entry.id,
                         answerText: entry.answerText,
                         fileUrl: entry.fileUrl,
                         autoScore: entry.autoScore,
