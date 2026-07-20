@@ -428,3 +428,27 @@ model Payment {
   @@index([studentId])
   @@map("payment")
 }
+
+// ==================== Фаза 11: rate limiting ====================
+
+// Таблица для Better Auth (rateLimit.storage: "database").
+// Форму полей (key/count/lastRequest) задаёт сам адаптер Better Auth.
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+// Собственные квоты приложения (вход, регистрация, ИИ-импорт, загрузки).
+// Отдельно от RateLimit: Better Auth периодически чистит свою таблицу по
+// короткому cutoff и стёр бы наши часовые/суточные окна.
+model AppRateLimit {
+  key         String   @id // например "login:ip:1.2.3.4"
+  count       Int
+  windowStart DateTime
+
+  @@map("app_rate_limit")
+}

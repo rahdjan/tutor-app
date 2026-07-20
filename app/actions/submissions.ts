@@ -8,6 +8,7 @@ import { blobConfigured, uploadSolutionPhoto } from "@/lib/blob";
 import { prisma } from "@/lib/prisma";
 import { requireStudent, requireTutor } from "@/lib/access";
 import { checkShortAnswer } from "@/lib/answers";
+import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
 import type { FormState } from "@/app/actions/auth";
 
 export type AnswerState = {
@@ -61,6 +62,15 @@ export async function saveAnswer(
   if (photo instanceof File && photo.size > 0) {
     if (!blobConfigured()) {
       return { error: "Загрузка фото пока не настроена. Отправьте решение текстом." };
+    }
+    const photoLimit = await consumeRateLimit(`photo:${session.user.id}`, {
+      windowSec: 3600,
+      max: 30,
+    });
+    if (!photoLimit.allowed) {
+      return {
+        error: `Слишком много фото за последний час. ${retryHint(photoLimit.retryAfterSec)} Пока можно отправить решение текстом.`,
+      };
     }
     if (photo.size > 8 * 1024 * 1024) {
       return { error: "Фото больше 8 МБ. Сфотографируйте с меньшим качеством." };

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireTutor } from "@/lib/access";
 import { parseTopicCode } from "@/lib/task-codes";
+import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
 import type { AnswerType } from "@/app/generated/prisma/enums";
 import type { FormState } from "@/app/actions/auth";
 
@@ -119,6 +120,11 @@ export async function importTasksJson(
 ): Promise<ImportReport> {
   const session = await requireTutor();
   const tutorId = session.user.id;
+
+  const limit = await consumeRateLimit(`import:${tutorId}`, { windowSec: 3600, max: 10 });
+  if (!limit.allowed) {
+    return { error: `Слишком много импортов за час. ${retryHint(limit.retryAfterSec)}` };
+  }
 
   // JSON приходит либо файлом, либо текстом из textarea.
   let raw = String(formData.get("json") ?? "").trim();

@@ -5,6 +5,7 @@
 // то есть только после проверки и подтверждения репетитором.
 import { requireTutor } from "@/lib/access";
 import { extractTasksWithAi, type AiDraft } from "@/lib/ai-import";
+import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
 
 export type AiImportState = {
   error?: string;
@@ -18,7 +19,18 @@ export async function aiExtract(
   _prev: AiImportState,
   formData: FormData,
 ): Promise<AiImportState> {
-  await requireTutor(); // изоляция/доступ: только репетитор
+  const session = await requireTutor(); // изоляция/доступ: только репетитор
+
+  // Каждый вызов — платный запрос к внешней модели. Часовой и суточный лимит
+  // вместе защищают и от быстрого случайного зацикливания, и от долгого спама.
+  const hourly = await consumeRateLimit(`ai:h:${session.user.id}`, { windowSec: 3600, max: 10 });
+  if (!hourly.allowed) {
+    return { error: `Слишком много запросов к ИИ-импорту за час. ${retryHint(hourly.retryAfterSec)}` };
+  }
+  const daily = await consumeRateLimit(`ai:d:${session.user.id}`, { windowSec: 86400, max: 40 });
+  if (!daily.allowed) {
+    return { error: `Дневной лимит ИИ-импорта исчерпан. ${retryHint(daily.retryAfterSec)}` };
+  }
 
   const pastedText = String(formData.get("text") ?? "").trim();
   const file = formData.get("file");

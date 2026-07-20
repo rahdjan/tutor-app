@@ -14,6 +14,24 @@ export const auth = betterAuth({
     minPasswordLength: 8,
   },
 
+  // Rate limit для прямых HTTP-запросов к /api/auth/* (curl-перебор в обход
+  // наших форм). Вызовы auth.api.* из server actions (login/registerTutor/
+  // registerStudent в app/actions/auth.ts) через этот лимитер НЕ проходят —
+  // для них отдельная защита в lib/rate-limit.ts, врезанная прямо в actions.
+  // storage: "database" — Vercel поднимает несколько инстансов, in-memory
+  // счётчик каждый из них видел бы свой.
+  rateLimit: {
+    enabled: process.env.NODE_ENV === "production",
+    storage: "database",
+    window: 60,
+    max: 60,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-up/email": { window: 3600, max: 10 },
+      "/get-session": false,
+    },
+  },
+
   user: {
     additionalFields: {
       // role и tutorId нельзя передать с клиента (input: false) — их выставляет

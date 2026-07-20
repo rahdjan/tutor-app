@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clientIp, consumeRateLimit, retryHint } from "@/lib/rate-limit";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -54,6 +55,12 @@ export async function registerTutor(
     return { error: "Для регистрации нужно согласие на обработку персональных данных." };
   }
 
+  const ip = await clientIp();
+  const limit = await consumeRateLimit(`reg:ip:${ip}`, { windowSec: 3600, max: 5 });
+  if (!limit.allowed) {
+    return { error: `Слишком много регистраций с вашего адреса. ${retryHint(limit.retryAfterSec)}` };
+  }
+
   try {
     // Роль не передаём: в БД по умолчанию TUTOR, с клиента её подменить нельзя.
     await auth.api.signUpEmail({
@@ -72,6 +79,18 @@ export async function login(
 ): Promise<FormState> {
   const { email, password } = readCredentials(formData);
   if (!email || !password) return { error: "Введите почту и пароль." };
+
+  // Двойной ключ: по IP (защита от распределённого перебора чужих аккаунтов)
+  // и по email (защита конкретного аккаунта от перебора с разных адресов).
+  const ip = await clientIp();
+  const byIp = await consumeRateLimit(`login:ip:${ip}`, { windowSec: 600, max: 10 });
+  if (!byIp.allowed) {
+    return { error: `Слишком много попыток входа. ${retryHint(byIp.retryAfterSec)}` };
+  }
+  const byEmail = await consumeRateLimit(`login:email:${email}`, { windowSec: 900, max: 10 });
+  if (!byEmail.allowed) {
+    return { error: `Слишком много попыток входа. ${retryHint(byEmail.retryAfterSec)}` };
+  }
 
   try {
     await auth.api.signInEmail({ body: { email, password } });
@@ -104,6 +123,14 @@ export async function registerStudent(
   }
   if (under16 && !parentConsent) {
     return { error: "Если тебе меньше 16 лет, нужно согласие родителя." };
+  }
+
+  // До поиска приглашения — коды одноразовые с большой энтропией, перебор
+  // нереален, но лимит защищает от бессмысленной нагрузки на БД.
+  const ip = await clientIp();
+  const limit = await consumeRateLimit(`regs:ip:${ip}`, { windowSec: 3600, max: 10 });
+  if (!limit.allowed) {
+    return { error: `Слишком много попыток регистрации. ${retryHint(limit.retryAfterSec)}` };
   }
 
   const invite = await prisma.invite.findUnique({

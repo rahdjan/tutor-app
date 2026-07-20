@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireTutor } from "@/lib/access";
+import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
 import type { Goal } from "@/app/generated/prisma/enums";
 import { GOALS } from "@/lib/labels";
 import type { FormState } from "@/app/actions/auth";
@@ -86,6 +87,14 @@ export async function createStudentInvite(
   });
   if (!student) return { error: "Карточка не найдена." };
   if (student.userId) return { error: "У ученика уже есть аккаунт." };
+
+  const limit = await consumeRateLimit(`invite:${session.user.id}`, {
+    windowSec: 3600,
+    max: 30,
+  });
+  if (!limit.allowed) {
+    return { error: `Слишком много приглашений за час. ${retryHint(limit.retryAfterSec)}` };
+  }
 
   // Старые неиспользованные приглашения карточки гасим — активна одна ссылка.
   await prisma.invite.updateMany({
