@@ -26,8 +26,10 @@ function Preview({ text }: { text: string }) {
 
 export function AiImportFlow({
   topicOptions,
+  curriculumTopicOptions,
 }: {
   topicOptions: { code: string; label: string }[];
+  curriculumTopicOptions: { code: string; title: string; label: string }[];
 }) {
   const [extractState, extractAction, extracting] = useActionState<
     AiImportState,
@@ -39,7 +41,10 @@ export function AiImportFlow({
   );
 
   const [drafts, setDrafts] = useState<EditableDraft[]>([]);
-  const [topicCode, setTopicCode] = useState("");
+  // Необязательный override: если задан, подставляется всем задачам разом
+  // (например, весь материал — один вариант ЕГЭ). Если пуст — у каждой
+  // задачи берётся её собственная тема (см. codeForTopic ниже).
+  const [bulkTopicCode, setBulkTopicCode] = useState("");
 
   // Когда извлечение завершилось — раскладываем черновик в редактируемый список.
   useEffect(() => {
@@ -51,11 +56,16 @@ export function AiImportFlow({
   const patch = (i: number, upd: Partial<EditableDraft>) =>
     setDrafts((prev) => prev.map((d, j) => (j === i ? { ...d, ...upd } : d)));
 
+  // Тема, которую вернула/выбрал репетитор для конкретной задачи, — в код
+  // topic_code (по точному совпадению заголовка в списке школьной программы).
+  const codeForTopic = (title: string): string | null =>
+    curriculumTopicOptions.find((t) => t.title === title)?.code ?? null;
+
   const selected = drafts.filter((d) => d.include);
   const saveJson = JSON.stringify(
-    selected.map(({ include: _include, ...d }) => ({
+    selected.map(({ include: _include, topic, ...d }) => ({
       ...d,
-      topic_code: topicCode || null,
+      topic_code: bulkTopicCode || codeForTopic(topic),
     })),
   );
 
@@ -186,6 +196,20 @@ export function AiImportFlow({
                     placeholder="теги через запятую"
                   />
                 </div>
+                <div className="mt-2">
+                  <select
+                    value={d.topic}
+                    onChange={(e) => patch(i, { topic: e.target.value })}
+                    className="input w-auto py-1 text-sm"
+                    title="Тема по программе — так задачу можно будет найти при сборке рабочего листа"
+                  >
+                    {curriculumTopicOptions.map((t) => (
+                      <option key={t.code} value={t.title}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 {d.answer_type === "SHORT" && !d.answer && (
                   <p className="mt-1 text-xs text-[#8f3a25]">
                     У краткой задачи нет ответа — заполните, иначе она будет
@@ -200,13 +224,17 @@ export function AiImportFlow({
           <form action={saveAction} className="mt-6 space-y-3">
             <div className="flex flex-wrap items-end gap-3">
               <div>
-                <label className="field-label">Тема для сохраняемых задач</label>
+                <label className="field-label">
+                  Тема для всех задач сразу (необязательно)
+                </label>
                 <select
-                  value={topicCode}
-                  onChange={(e) => setTopicCode(e.target.value)}
+                  value={bulkTopicCode}
+                  onChange={(e) => setBulkTopicCode(e.target.value)}
                   className="input w-72"
                 >
-                  <option value="">Без темы</option>
+                  <option value="">
+                    Своя у каждой задачи (см. карточки выше)
+                  </option>
                   {topicOptions.map((t) => (
                     <option key={t.code} value={t.code}>
                       {t.label}

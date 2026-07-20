@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import type { FormState } from "@/app/actions/auth";
 import { addPlanTopics } from "@/app/actions/plan";
 import { EXAM_LABELS } from "@/lib/labels";
+import { OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
 import type { Exam } from "@/app/generated/prisma/enums";
 
 type TopicOption = {
@@ -11,21 +12,42 @@ type TopicOption = {
   title: string;
   exam: Exam | null;
   kimNumber: number | null;
+  grade?: number | null;
+  section?: string | null;
+  tutorId?: string | null;
 };
 
-// Выбор тем чекбоксами. Темы кодификатора сгруппированы по экзамену
-// в сворачиваемые блоки; уже добавленные показаны отключёнными.
+// Функции нельзя передать из серверного компонента в клиентский — поэтому
+// группировка выбирается сериализуемым флагом, а не колбэком пропом.
+function groupKeyOf(t: TopicOption, groupBy?: "exam" | "grade"): string {
+  if (groupBy === "exam") return t.exam ?? "_";
+  if (groupBy === "grade") return t.grade ? String(t.grade) : "other";
+  return "_";
+}
+
+function groupLabelOf(key: string, groupBy?: "exam" | "grade"): string {
+  if (groupBy === "exam") return EXAM_LABELS[key as Exam];
+  if (groupBy === "grade") return key === "other" ? OTHER_TOPIC_TITLE : `${key} класс`;
+  return key;
+}
+
+// Выбор тем чекбоксами, сгруппированных в сворачиваемые блоки (или без
+// группировки, если groupBy не задан/compact) — переиспользуется и для
+// кодификатора ЕГЭ/ОГЭ (группа = экзамен), и для школьной программы
+// (группа = класс), и для своих тем репетитора (без группировки).
 export function AddTopicsForm({
   studentId,
   topics,
   addedTopicIds,
-  defaultExam,
+  groupBy,
+  defaultOpenKey,
   compact = false,
 }: {
   studentId: string;
   topics: TopicOption[];
   addedTopicIds: string[];
-  defaultExam: Exam | null;
+  groupBy?: "exam" | "grade";
+  defaultOpenKey?: string | null;
   compact?: boolean;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
@@ -34,18 +56,19 @@ export function AddTopicsForm({
   );
   const added = new Set(addedTopicIds);
 
-  const groups = new Map<Exam | null, TopicOption[]>();
+  const groups = new Map<string, TopicOption[]>();
   for (const t of topics) {
-    const list = groups.get(t.exam) ?? [];
+    const key = groupKeyOf(t, groupBy);
+    const list = groups.get(key) ?? [];
     list.push(t);
-    groups.set(t.exam, list);
+    groups.set(key, list);
   }
 
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="studentId" value={studentId} />
 
-      {[...groups.entries()].map(([exam, list]) => {
+      {[...groups.entries()].map(([key, list]) => {
         const body = (
           <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto pr-1">
             {list.map((t) => (
@@ -70,13 +93,13 @@ export function AddTopicsForm({
             ))}
           </ul>
         );
-        if (compact || exam === null) {
-          return <div key={exam ?? "custom"}>{body}</div>;
+        if (compact || !groupBy) {
+          return <div key={key}>{body}</div>;
         }
         return (
-          <details key={exam} open={exam === defaultExam}>
+          <details key={key} open={key === defaultOpenKey}>
             <summary className="cursor-pointer text-sm font-bold">
-              {EXAM_LABELS[exam]}{" "}
+              {groupLabelOf(key, groupBy)}{" "}
               <span className="font-normal text-muted">({list.length})</span>
             </summary>
             {body}

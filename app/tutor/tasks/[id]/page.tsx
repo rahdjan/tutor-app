@@ -27,7 +27,7 @@ export default async function TaskPage({
   const topics = await prisma.topic.findMany({
     where: { OR: [{ tutorId: null }, { tutorId: session.user.id }] },
     orderBy: [{ exam: "asc" }, { order: "asc" }],
-    select: { id: true, title: true, exam: true, kimNumber: true },
+    select: { id: true, title: true, exam: true, kimNumber: true, grade: true, tutorId: true },
   });
 
   return (

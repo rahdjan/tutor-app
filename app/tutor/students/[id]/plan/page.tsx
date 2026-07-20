@@ -39,13 +39,30 @@ export default async function PlanPage({
   const mastered = items.filter((i) => i.status === "MASTERED").length;
   const progress = items.length > 0 ? Math.round((mastered / items.length) * 100) : 0;
 
-  // Темы для выбора: общий кодификатор + свои темы репетитора.
+  // Темы для выбора: кодификатор ЕГЭ/ОГЭ + общая школьная программа
+  // (5–11 класс, видна всем) + свои темы репетитора.
   const topics = await prisma.topic.findMany({
     where: { OR: [{ tutorId: null }, { tutorId: session.user.id }] },
-    orderBy: [{ exam: "asc" }, { order: "asc" }],
-    select: { id: true, title: true, exam: true, kimNumber: true },
+    orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      exam: true,
+      kimNumber: true,
+      grade: true,
+      section: true,
+      tutorId: true,
+    },
   });
   const addedTopicIds = new Set(items.map((i) => i.topicId));
+
+  const codifierTopics = topics.filter((t) => t.exam !== null);
+  const schoolTopics = topics.filter((t) => t.exam === null && t.tutorId === null);
+  const customTopics = topics.filter((t) => t.exam === null && t.tutorId !== null);
+  const studentGradeKey =
+    student.grade && student.grade >= 5 && student.grade <= 11
+      ? String(student.grade)
+      : null;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 pb-16">
@@ -83,8 +100,8 @@ export default async function PlanPage({
           <p className="eyebrow mb-4 text-muted">• Темы программы</p>
           {items.length === 0 ? (
             <p className="text-sm text-muted">
-              Пока пусто. Добавьте темы из кодификатора справа — или создайте
-              свою тему, если готовите не к экзамену.
+              Пока пусто. Добавьте темы из кодификатора или школьной программы
+              справа — или создайте свою тему, если готовите не к экзамену.
             </p>
           ) : (
             <ul className="space-y-3">
@@ -97,6 +114,9 @@ export default async function PlanPage({
                     title: item.topic.title,
                     exam: item.topic.exam,
                     kimNumber: item.topic.kimNumber,
+                    grade: item.topic.grade,
+                    section: item.topic.section,
+                    tutorId: item.topic.tutorId,
                     status: item.status,
                     plannedFor: item.plannedFor
                       ? item.plannedFor.toISOString().slice(0, 10)
@@ -116,25 +136,36 @@ export default async function PlanPage({
             <p className="eyebrow mb-4 text-muted">• Из кодификатора</p>
             <AddTopicsForm
               studentId={student.id}
-              topics={topics.filter((t) => t.exam !== null)}
+              topics={codifierTopics}
               addedTopicIds={[...addedTopicIds]}
-              defaultExam={student.goal !== "OTHER" ? student.goal : null}
+              groupBy="exam"
+              defaultOpenKey={student.goal !== "OTHER" ? student.goal : null}
+            />
+          </section>
+
+          <section className="window-card p-6">
+            <p className="eyebrow mb-4 text-muted">• Школьная программа</p>
+            <AddTopicsForm
+              studentId={student.id}
+              topics={schoolTopics}
+              addedTopicIds={[...addedTopicIds]}
+              groupBy="grade"
+              defaultOpenKey={studentGradeKey}
             />
           </section>
 
           <section className="window-card p-6">
             <p className="eyebrow mb-4 text-muted">• Своя тема</p>
             <CustomTopicForm studentId={student.id} />
-            {topics.some((t) => t.exam === null && !addedTopicIds.has(t.id)) && (
+            {customTopics.some((t) => !addedTopicIds.has(t.id)) && (
               <div className="mt-4">
                 <p className="mb-2 text-xs text-muted">
                   Ваши темы, ещё не добавленные в эту программу:
                 </p>
                 <AddTopicsForm
                   studentId={student.id}
-                  topics={topics.filter((t) => t.exam === null)}
+                  topics={customTopics}
                   addedTopicIds={[...addedTopicIds]}
-                  defaultExam={null}
                   compact
                 />
               </div>

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireTutor } from "@/lib/access";
 import { parseTopicCode } from "@/lib/task-codes";
 import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
+import { OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
 import type { AnswerType } from "@/app/generated/prisma/enums";
 import type { FormState } from "@/app/actions/auth";
 
@@ -190,6 +191,22 @@ export async function importTasksJson(
             data: { title: ref.customTitle, tutorId },
           }));
         topicId = topic.id;
+      } else if ("generalTitle" in ref) {
+        // Общая тема школьной программы: ищем только среди общих (tutorId
+        // null), не создаём — если не нашлась, откатываемся на «Другое»
+        // вместо того, чтобы оставить задачу совсем без темы.
+        const topic = await prisma.topic.findFirst({
+          where: { tutorId: null, exam: null, title: ref.generalTitle },
+        });
+        if (topic) {
+          topicId = topic.id;
+        } else {
+          const other = await prisma.topic.findFirst({
+            where: { tutorId: null, exam: null, title: OTHER_TOPIC_TITLE },
+          });
+          if (other) topicId = other.id;
+          else problems.push(`№${i + 1}: тема «${code}» не найдена, задача без темы`);
+        }
       } else {
         const topic = await prisma.topic.findFirst({
           where: { exam: ref.exam, kimNumber: ref.kimNumber, tutorId: null },

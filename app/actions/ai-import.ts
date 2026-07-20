@@ -6,6 +6,8 @@
 import { requireTutor } from "@/lib/access";
 import { extractTasksWithAi, type AiDraft } from "@/lib/ai-import";
 import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
+import { prisma } from "@/lib/prisma";
+import { OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
 
 export type AiImportState = {
   error?: string;
@@ -14,6 +16,21 @@ export type AiImportState = {
 
 const MAX_FILE = 8 * 1024 * 1024;
 const ALLOWED_TYPES = ["application/pdf", "text/plain"];
+
+/** Заголовки общей школьной программы (5–11 класс) + «Другое» — список,
+ * по которому модель классифицирует задачи (см. lib/ai-import.ts). */
+async function schoolTopicTitles(): Promise<string[]> {
+  const topics = await prisma.topic.findMany({
+    where: {
+      tutorId: null,
+      exam: null,
+      OR: [{ grade: { not: null } }, { title: OTHER_TOPIC_TITLE }],
+    },
+    select: { title: true },
+    orderBy: [{ grade: "asc" }, { order: "asc" }],
+  });
+  return topics.map((t) => t.title);
+}
 
 export async function aiExtract(
   _prev: AiImportState,
@@ -34,6 +51,7 @@ export async function aiExtract(
 
   const pastedText = String(formData.get("text") ?? "").trim();
   const file = formData.get("file");
+  const topics = await schoolTopicTitles();
 
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_FILE) {
@@ -45,12 +63,13 @@ export async function aiExtract(
     }
     if (mime === "text/plain") {
       const text = await file.text();
-      const result = await extractTasksWithAi({ text });
+      const result = await extractTasksWithAi({ text, topics });
       return result.ok ? { drafts: result.drafts } : { error: result.error };
     }
     const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
     const result = await extractTasksWithAi({
       file: { mimeType: mime, base64 },
+      topics,
     });
     return result.ok ? { drafts: result.drafts } : { error: result.error };
   }
@@ -61,6 +80,6 @@ export async function aiExtract(
   if (pastedText.length > 100_000) {
     return { error: "Текст слишком длинный — разбейте на части." };
   }
-  const result = await extractTasksWithAi({ text: pastedText });
+  const result = await extractTasksWithAi({ text: pastedText, topics });
   return result.ok ? { drafts: result.drafts } : { error: result.error };
 }

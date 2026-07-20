@@ -28,6 +28,9 @@ export function PlanItemRow({
     title: string;
     exam: Exam | null;
     kimNumber: number | null;
+    grade: number | null;
+    section: string | null;
+    tutorId: string | null;
     status: PlanStatus;
     plannedFor: string;
   };
@@ -44,12 +47,12 @@ export function PlanItemRow({
     {},
   );
 
-  const badge =
-    item.exam && item.kimNumber
-      ? `${EXAM_LABELS[item.exam]} №${item.kimNumber}`
-      : item.exam
-        ? EXAM_LABELS[item.exam]
-        : "своя тема";
+  let badge: string;
+  if (item.exam && item.kimNumber) badge = `${EXAM_LABELS[item.exam]} №${item.kimNumber}`;
+  else if (item.exam) badge = EXAM_LABELS[item.exam];
+  else if (item.grade) badge = item.section ? `${item.grade} класс · ${item.section}` : `${item.grade} класс`;
+  else if (item.tutorId === null) badge = "школьная программа";
+  else badge = "своя тема";
 
   return (
     <li

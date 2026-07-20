@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import type { FormState } from "@/app/actions/auth";
 import { renderMathHtml } from "@/lib/latex";
 import { EXAM_LABELS } from "@/lib/labels";
+import { OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
 import type { Exam } from "@/app/generated/prisma/enums";
 
 export type TopicOption = {
@@ -11,6 +12,8 @@ export type TopicOption = {
   title: string;
   exam: Exam | null;
   kimNumber: number | null;
+  grade: number | null;
+  tutorId: string | null;
 };
 
 type TaskValues = {
@@ -86,8 +89,21 @@ export function TaskForm({
   );
   const [answerType, setAnswerType] = useState(initial.answerType ?? "SHORT");
 
+  // Разделение: ЕГЭ/ОГЭ (exam заполнен) / общая школьная программа
+  // (exam=null, tutorId=null, тема сидится для всех) / свои темы репетитора
+  // (exam=null, tutorId заполнен).
   const codifier = topics.filter((t) => t.exam !== null);
-  const custom = topics.filter((t) => t.exam === null);
+  const school = topics.filter((t) => t.exam === null && t.tutorId === null);
+  const custom = topics.filter((t) => t.exam === null && t.tutorId !== null);
+  const schoolByGrade = new Map<number | null, TopicOption[]>();
+  for (const t of school) {
+    const list = schoolByGrade.get(t.grade) ?? [];
+    list.push(t);
+    schoolByGrade.set(t.grade, list);
+  }
+  const grades = [...schoolByGrade.keys()]
+    .filter((g): g is number => g !== null)
+    .sort((a, b) => a - b);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -175,6 +191,27 @@ export function TaskForm({
                     {t.title}
                   </option>
                 ))}
+              </optgroup>
+            )}
+            {grades.map((grade) => (
+              <optgroup key={grade} label={`${grade} класс`}>
+                {schoolByGrade.get(grade)!.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+            {schoolByGrade.get(null) && (
+              <optgroup label="Школьная программа">
+                {schoolByGrade
+                  .get(null)!
+                  .filter((t) => t.title === OTHER_TOPIC_TITLE)
+                  .map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.title}
+                    </option>
+                  ))}
               </optgroup>
             )}
             {(["EGE_PROF", "EGE_BASE", "OGE"] as Exam[]).map((exam) => (

@@ -4,7 +4,7 @@ import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { MathText } from "@/components/math-text";
-import { EXAM_LABELS } from "@/lib/labels";
+import { formatTopicLabel } from "@/lib/curriculum-topics";
 import type { AnswerType, Prisma } from "@/app/generated/prisma/client";
 
 export const metadata: Metadata = { title: "Банк задач" };
@@ -41,14 +41,18 @@ export default async function TasksPage({
   const [tasks, topics, total] = await Promise.all([
     prisma.task.findMany({
       where,
-      include: { topic: { select: { title: true, exam: true, kimNumber: true } } },
+      include: {
+        topic: {
+          select: { title: true, exam: true, kimNumber: true, grade: true, section: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
     prisma.topic.findMany({
       where: { OR: [{ tutorId: null }, { tutorId }] },
-      orderBy: [{ exam: "asc" }, { order: "asc" }],
-      select: { id: true, title: true, exam: true, kimNumber: true },
+      orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
+      select: { id: true, title: true, exam: true, kimNumber: true, grade: true, section: true },
     }),
     prisma.task.count({ where: { tutorId } }),
   ]);
@@ -87,9 +91,7 @@ export default async function TasksPage({
             <option value="none">Без темы</option>
             {topics.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.exam
-                  ? `${EXAM_LABELS[t.exam]} №${t.kimNumber} · ${t.title}`
-                  : t.title}
+                {formatTopicLabel(t)}
               </option>
             ))}
           </select>
@@ -163,13 +165,7 @@ export default async function TasksPage({
                     {t.answerType === "SHORT" ? "краткий ответ" : "развёрнутый"}
                   </span>
                   <span>сложность {t.difficulty}/5</span>
-                  {t.topic && (
-                    <span>
-                      {t.topic.exam
-                        ? `${EXAM_LABELS[t.topic.exam]} №${t.topic.kimNumber}`
-                        : t.topic.title}
-                    </span>
-                  )}
+                  {t.topic && <span>{formatTopicLabel(t.topic)}</span>}
                   {t.source && <span>{t.source}</span>}
                   {t.tags.map((tag) => (
                     <span key={tag} className="rounded-full border border-ink/30 px-2">

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
-import { EXAM_LABELS } from "@/lib/labels";
+import { formatTopicLabel } from "@/lib/curriculum-topics";
 import {
   AddBankForm,
   AssignForm,
@@ -69,14 +69,12 @@ export default async function WorksheetPage({
 
   const topics = await prisma.topic.findMany({
     where: { OR: [{ tutorId: null }, { tutorId }] },
-    orderBy: [{ exam: "asc" }, { order: "asc" }],
-    select: { id: true, title: true, exam: true, kimNumber: true },
+    orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
+    select: { id: true, title: true, exam: true, kimNumber: true, grade: true, section: true },
   });
   const topicOptions = topics.map((t) => ({
     id: t.id,
-    label: t.exam
-      ? `${EXAM_LABELS[t.exam]} №${t.kimNumber} · ${t.title}`
-      : t.title,
+    label: formatTopicLabel(t),
   }));
 
   const students = await prisma.student.findMany({

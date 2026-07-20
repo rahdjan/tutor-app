@@ -4,7 +4,7 @@ import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { topicCode } from "@/lib/task-codes";
-import { EXAM_LABELS } from "@/lib/labels";
+import { formatTopicLabel, OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
 import { AiImportFlow } from "./ai-import-flow";
 
 export const metadata: Metadata = { title: "ИИ-импорт задач" };
@@ -15,15 +15,24 @@ export default async function AiImportPage() {
   // Темы для выпадающего списка (код темы → подпись)
   const topics = await prisma.topic.findMany({
     where: { OR: [{ tutorId: null }, { tutorId: session.user.id }] },
-    orderBy: [{ exam: "asc" }, { order: "asc" }],
-    select: { id: true, title: true, exam: true, kimNumber: true },
+    orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
+    select: { id: true, title: true, exam: true, kimNumber: true, grade: true, section: true, tutorId: true },
   });
   const topicOptions = topics.map((t) => ({
     code: topicCode(t),
-    label: t.exam
-      ? `${EXAM_LABELS[t.exam]} №${t.kimNumber} · ${t.title}`
-      : t.title,
+    label: formatTopicLabel(t),
   }));
+
+  // Отдельно: только общая школьная программа + «Другое» — по этому списку
+  // модель классифицирует задачи (см. app/actions/ai-import.ts), нужен для
+  // выбора темы у каждой отдельной задачи в черновике.
+  const curriculumTopicOptions = topics
+    .filter((t) => t.exam === null && t.tutorId === null)
+    .map((t) => ({
+      code: topicCode(t),
+      title: t.title,
+      label: formatTopicLabel(t),
+    }));
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 pb-16">
@@ -35,14 +44,19 @@ export default async function AiImportPage() {
         ИИ-импорт задач
       </h1>
       <p className="mb-6 max-w-2xl text-sm text-muted">
-        Загрузите PDF или вставьте текст — модель соберёт черновик задач.{" "}
+        Загрузите PDF или вставьте текст — модель соберёт черновик задач и
+        расставит темы по программе 5–11 класс (то, что не подошло —
+        «{OTHER_TOPIC_TITLE}»).{" "}
         <b className="text-ink">
           Модель может ошибаться: проверьте каждую задачу перед сохранением.
         </b>{" "}
         В банк попадёт только то, что вы отметите и подтвердите.
       </p>
 
-      <AiImportFlow topicOptions={topicOptions} />
+      <AiImportFlow
+        topicOptions={topicOptions}
+        curriculumTopicOptions={curriculumTopicOptions}
+      />
     </div>
   );
 }
