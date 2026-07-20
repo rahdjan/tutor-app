@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Golos_Text, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import "katex/dist/katex.min.css";
+import { CookieBanner } from "@/components/cookie-banner";
 
 const golos = Golos_Text({
   variable: "--font-golos",
@@ -30,7 +31,10 @@ export default function RootLayout({
       lang="ru"
       className={`${golos.variable} ${playfair.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   );
 }
