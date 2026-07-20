@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 // ВАЖНО: это рабочий шаблон политики. Перед реальным запуском впишите
 // официальное название/ФИО оператора и покажите текст юристу (см. SECURITY.md).
-const OPERATOR_NAME = "[ФИО или название оператора — заполнить перед запуском]";
+const OPERATOR_NAME = "Ковшов Савва Кириллович";
 const CONTACT_EMAIL = "kovshovsav@gmail.com";
 
 export default function PrivacyPage() {
