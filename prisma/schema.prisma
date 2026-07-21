@@ -24,6 +24,13 @@ enum Role {
   STUDENT
 }
 
+// Предмет репетитора — выбирается один раз при регистрации (см. lib/auth.ts).
+// У ученика повторяет предмет пригласившего репетитора.
+enum Subject {
+  MATH
+  ENGLISH
+}
+
 model User {
   id            String   @id
   name          String
@@ -36,6 +43,8 @@ model User {
   // Роль и мультиарендность: у ученика заполнен tutorId — пригласивший репетитор.
   role    Role    @default(TUTOR)
   tutorId String?
+  // Предмет репетитора (математика/английский); у ученика — предмет tutor'а.
+  subject Subject @default(MATH)
   tutor   User?   @relation("TutorStudents", fields: [tutorId], references: [id], onDelete: SetNull)
   students User[] @relation("TutorStudents")
 
@@ -137,11 +146,15 @@ model Invite {
 
 // ==================== Учебное ядро (Фаза 3) ====================
 
-// Цель подготовки ученика
+// Цель подготовки ученика. Держится вручную параллельным enum Exam (кроме
+// OTHER) — значения без профиль/база (EGE_ENG/OGE_ENG) добавлены под
+// английский, где такого деления нет.
 enum Goal {
   EGE_PROF
   EGE_BASE
   OGE
+  EGE_ENG
+  OGE_ENG
   OTHER
 }
 
@@ -150,6 +163,8 @@ enum Exam {
   EGE_PROF
   EGE_BASE
   OGE
+  EGE_ENG
+  OGE_ENG
 }
 
 // Тип ответа задачи: SHORT — число/строка с автопроверкой,
@@ -197,22 +212,29 @@ model Student {
   @@map("student")
 }
 
-// Тема кодификатора ФИПИ, общей школьной программы или произвольная.
-// tutorId = null, exam заполнен — кодификатор ЕГЭ/ОГЭ (сид), виден всем.
+// Тема кодификатора ФИПИ, общей программы (школьной/речевой) или произвольная.
+// Всегда скопирована по предмету (subject) — математика и английский не
+// пересекаются ни в одном запросе (см. lib/topic-visibility.ts).
+// tutorId = null, exam заполнен — кодификатор ЕГЭ/ОГЭ (сид), виден всем
+//   репетиторам этого предмета.
 // tutorId = null, exam = null, grade заполнен — общая тема школьной
-//   программы 5–11 класс (сид), тоже видна всем репетиторам.
-// tutorId = null, exam = null, grade = null, title = "Другое" — общий
-//   разбор-катчер, когда задача не подходит ни под одну тему программы.
+//   программы 5–11 класс (математика, сид), тоже видна всем.
+// tutorId = null, exam = null, grade = null, section заполнен — общая тема
+//   без привязки к классу (английский: категории грамматики/речевых
+//   навыков — «Части речи», «Аудирование» и т.п., сид).
+// tutorId = null, exam = null, grade = null, section = null,
+//   title = "Другое" — разбор-катчер, отдельная запись на каждый предмет.
 // tutorId заполнен — личная тема репетитора, видна только ему.
 model Topic {
   id        String  @id @default(cuid())
   title     String
+  subject   Subject @default(MATH)
   exam      Exam? // null — произвольная тема вне ЕГЭ/ОГЭ
-  grade     Int? // класс 5–11 для общей школьной программы (см. выше)
-  section   String? // раздел: «Часть 1 (краткий ответ)» в ЕГЭ, «Алгебра»/«Геометрия» в школьной программе
+  grade     Int? // класс 5–11 для школьной программы (математика, см. выше)
+  section   String? // «Часть 1» в ЕГЭ / «Алгебра»,«Геометрия» в школьной программе / категория речевых навыков в английском
   kimNumber Int? // номер задания в КИМ
   fipiCode  String? // код по кодификатору ФИПИ, например «3.1»
-  order     Int? // порядок показа внутри экзамена/класса
+  order     Int? // порядок показа внутри экзамена/класса/раздела
 
   tutorId String?
   tutor   User?   @relation("TutorTopics", fields: [tutorId], references: [id], onDelete: Cascade)
@@ -226,6 +248,7 @@ model Topic {
 
   @@index([exam, kimNumber])
   @@index([tutorId])
+  @@index([subject])
   @@map("topic")
 }
 

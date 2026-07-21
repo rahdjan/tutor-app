@@ -38,6 +38,10 @@ export const auth = betterAuth({
       // только наш серверный код. Это защита от подделки роли через API.
       role: { type: "string", required: false, input: false },
       tutorId: { type: "string", required: false, input: false },
+      // Предмет репетитора: хоть его и выбирает сам пользователь в форме,
+      // запись всё равно делает только сервер (см. registerTutor/
+      // registerStudent) — та же защита от подделки через сырой API-запрос.
+      subject: { type: "string", required: false, input: false },
       // Согласия приходят из формы регистрации и проверяются хуком ниже.
       consentAccepted: { type: "boolean", required: true, input: true },
       under16: { type: "boolean", required: false, input: true },

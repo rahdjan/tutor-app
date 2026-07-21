@@ -73,7 +73,7 @@ export default async function ReviewListPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 pb-16">
-      <DashboardHeader userName={session.user.name} tutorNav />
+      <DashboardHeader userName={session.user.name} subject={session.user.subject} tutorNav />
 
       <h1 className="mt-4 mb-8 text-3xl font-extrabold tracking-tight">
         Проверка работ

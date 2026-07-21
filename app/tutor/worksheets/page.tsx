@@ -20,7 +20,7 @@ export default async function WorksheetsPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 pb-16">
-      <DashboardHeader userName={session.user.name} tutorNav />
+      <DashboardHeader userName={session.user.name} subject={session.user.subject} tutorNav />
 
       <div className="mt-4 mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-extrabold tracking-tight">

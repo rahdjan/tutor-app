@@ -45,7 +45,7 @@ export default async function ReviewPage({
 
   return (
     <div className="mx-auto w-full max-w-4xl px-5 pb-16">
-      <DashboardHeader userName={session.user.name} tutorNav />
+      <DashboardHeader userName={session.user.name} subject={session.user.subject} tutorNav />
 
       <Link href="/tutor/review" className="text-sm font-semibold underline">
         ← Ко всем работам

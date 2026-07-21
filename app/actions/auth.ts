@@ -41,6 +41,8 @@ function readCredentials(formData: FormData) {
   };
 }
 
+const SUBJECTS = ["MATH", "ENGLISH"] as const;
+
 /** Регистрация репетитора: открыта для всех. */
 export async function registerTutor(
   _prev: FormState,
@@ -48,12 +50,19 @@ export async function registerTutor(
 ): Promise<FormState> {
   const { name, email, password } = readCredentials(formData);
   const consent = formData.get("consent") === "on";
+  const subjectRaw = String(formData.get("subject") ?? "");
 
   if (!name || !email) return { error: "Заполните имя и почту." };
   if (password.length < 8) return { error: "Пароль должен быть не короче 8 символов." };
   if (!consent) {
     return { error: "Для регистрации нужно согласие на обработку персональных данных." };
   }
+  // Предмет — разовый и необратимый выбор, поэтому без формы не пускаем
+  // (в отличие от goal у ученика, тут молчаливый фолбэк был бы хуже отказа).
+  if (!(SUBJECTS as readonly string[]).includes(subjectRaw)) {
+    return { error: "Выберите направление: математика или английский." };
+  }
+  const subject = subjectRaw as (typeof SUBJECTS)[number];
 
   const ip = await clientIp();
   const limit = await consumeRateLimit(`reg:ip:${ip}`, { windowSec: 3600, max: 5 });
@@ -69,6 +78,9 @@ export async function registerTutor(
   } catch (error) {
     return { error: authErrorMessage(error) };
   }
+  // subject тоже нельзя передать через signUpEmail (additionalFields.input:false) —
+  // проставляем отдельным серверным апдейтом, как role/tutorId у ученика.
+  await prisma.user.update({ where: { email }, data: { subject } });
   redirect("/tutor");
 }
 
@@ -135,7 +147,10 @@ export async function registerStudent(
 
   const invite = await prisma.invite.findUnique({
     where: { code },
-    include: { student: { select: { userId: true } } },
+    include: {
+      student: { select: { userId: true } },
+      tutor: { select: { subject: true } },
+    },
   });
   if (!invite || invite.usedAt || invite.expiresAt < new Date()) {
     return { error: "Приглашение недействительно. Попросите у репетитора новую ссылку." };
@@ -174,10 +189,11 @@ export async function registerStudent(
     return { error: authErrorMessage(error) };
   }
 
-  // Привязываем нового ученика к репетитору из приглашения.
+  // Привязываем нового ученика к репетитору из приглашения — предмет
+  // ученик не выбирает сам, а наследует от пригласившего репетитора.
   const user = await prisma.user.update({
     where: { email },
-    data: { role: "STUDENT", tutorId: invite.tutorId },
+    data: { role: "STUDENT", tutorId: invite.tutorId, subject: invite.tutor.subject },
   });
 
   // Аккаунт присоединяется к карточке ученика: либо к той, из которой

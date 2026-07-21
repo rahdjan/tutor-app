@@ -55,6 +55,27 @@ export function TutorRegisterForm() {
         />
       </div>
 
+      <div>
+        <span className="field-label">Направление</span>
+        <div className="flex gap-4 text-sm">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="subject"
+              value="MATH"
+              defaultChecked
+              required
+              className="accent-[#46231a]"
+            />
+            Математика
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="radio" name="subject" value="ENGLISH" className="accent-[#46231a]" />
+            Английский
+          </label>
+        </div>
+      </div>
+
       <label className="flex items-start gap-2.5 text-sm">
         <input type="checkbox" name="consent" required className="mt-0.5 accent-[#46231a]" />
         <span>
