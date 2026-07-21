@@ -76,10 +76,6 @@ export default async function TutorPage() {
           ))}
         </ul>
       )}
-
-      <p className="mt-8 text-sm text-muted">
-        Банк задач, программа и задания появятся в следующих фазах.
-      </p>
     </div>
   );
 }
