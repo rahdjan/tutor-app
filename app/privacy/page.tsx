@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Политика конфиденциальности — Репетитор.Платформа",
+  title: "Политика конфиденциальности — Платформа.Репетитор",
 };
 
 // ВАЖНО: это рабочий шаблон политики. Перед реальным запуском впишите

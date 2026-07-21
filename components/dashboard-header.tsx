@@ -13,7 +13,7 @@ export function DashboardHeader({
     <header className="flex flex-wrap items-center justify-between gap-4 py-5">
       <div className="flex items-center gap-6">
         <Link href="/" className="text-lg font-bold tracking-tight">
-          Репетитор<span className="font-serif italic font-medium">.Платформа</span>
+          Платформа.<span className="font-serif italic font-medium">Репетитор</span>
         </Link>
         {tutorNav && (
           <nav className="flex items-center gap-4 text-sm font-semibold">
