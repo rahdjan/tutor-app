@@ -77,13 +77,13 @@ export function AiImportFlow({
         <form action={extractAction} className="space-y-4">
           <div>
             <label htmlFor="file" className="field-label">
-              PDF или .txt (до 8 МБ)
+              PDF, фото (JPEG/PNG/WEBP) или .txt (до 8 МБ)
             </label>
             <input
               id="file"
               name="file"
               type="file"
-              accept=".pdf,.txt,application/pdf,text/plain"
+              accept=".pdf,.txt,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/jpeg,image/png,image/webp"
               className="input"
             />
           </div>

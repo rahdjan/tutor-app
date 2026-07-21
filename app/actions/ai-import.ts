@@ -1,6 +1,6 @@
 "use server";
 
-// ИИ-импорт: извлечение черновика задач из PDF/текста.
+// ИИ-импорт: извлечение черновика задач из PDF/изображения/текста.
 // Сохранение черновика идёт через обычный importTasksJson —
 // то есть только после проверки и подтверждения репетитором.
 import { requireTutor } from "@/lib/access";
@@ -15,7 +15,13 @@ export type AiImportState = {
 };
 
 const MAX_FILE = 8 * 1024 * 1024;
-const ALLOWED_TYPES = ["application/pdf", "text/plain"];
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "text/plain",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
 
 /** Заголовки общей школьной программы (5–11 класс) + «Другое» — список,
  * по которому модель классифицирует задачи (см. lib/ai-import.ts). */
@@ -59,7 +65,7 @@ export async function aiExtract(
     }
     const mime = file.type || "application/pdf";
     if (!ALLOWED_TYPES.includes(mime)) {
-      return { error: "Поддерживаются PDF и текстовые файлы (.txt)." };
+      return { error: "Поддерживаются PDF, изображения (JPEG/PNG/WEBP) и текстовые файлы (.txt)." };
     }
     if (mime === "text/plain") {
       const text = await file.text();

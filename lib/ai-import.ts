@@ -1,4 +1,4 @@
-// ИИ-извлечение задач из PDF или текста.
+// ИИ-извлечение задач из PDF, изображения или текста.
 // Работает через OpenAI-совместимый API (у нас — агрегатор AITunnel,
 // модель Gemini 2.5 Flash). Всё настраивается переменными окружения:
 //   AI_API_KEY  — ключ (обязателен)
@@ -58,7 +58,8 @@ export type AiExtractResult =
 
 type ContentPart =
   | { type: "text"; text: string }
-  | { type: "file"; file: { filename: string; file_data: string } };
+  | { type: "file"; file: { filename: string; file_data: string } }
+  | { type: "image_url"; image_url: { url: string } };
 
 export async function extractTasksWithAi(input: {
   text?: string;
@@ -74,13 +75,18 @@ export async function extractTasksWithAi(input: {
 
   const content: ContentPart[] = [{ type: "text", text: buildPrompt(input.topics) }];
   if (input.file) {
-    content.push({
-      type: "file",
-      file: {
-        filename: "material.pdf",
-        file_data: `data:${input.file.mimeType};base64,${input.file.base64}`,
-      },
-    });
+    const dataUrl = `data:${input.file.mimeType};base64,${input.file.base64}`;
+    // PDF идёт как "file" (формат OpenAI-совместимых API для документов),
+    // изображения — как "image_url" (стандартный vision-формат): это два
+    // разных типа контент-парта, модель их не взаимозаменяет.
+    if (input.file.mimeType.startsWith("image/")) {
+      content.push({ type: "image_url", image_url: { url: dataUrl } });
+    } else {
+      content.push({
+        type: "file",
+        file: { filename: "material.pdf", file_data: dataUrl },
+      });
+    }
   }
   if (input.text) {
     content.push({ type: "text", text: `Материал:\n\n${input.text}` });
