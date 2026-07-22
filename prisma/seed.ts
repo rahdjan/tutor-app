@@ -11,7 +11,7 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
 });
 
-type SeedTopic = { n: number; title: string; detailed?: boolean };
+type SeedTopic = { n: number; title: string; detailed?: boolean; section?: string };
 
 // ЕГЭ профильный уровень: 19 заданий, 1–12 краткий ответ, 13–19 развёрнутый
 const EGE_PROF: SeedTopic[] = [
@@ -88,6 +88,97 @@ const OGE: SeedTopic[] = [
   { n: 23, title: "Геометрическая задача на вычисление", detailed: true },
   { n: 24, title: "Геометрическая задача на доказательство", detailed: true },
   { n: 25, title: "Геометрическая задача повышенной сложности", detailed: true },
+];
+
+// ЕГЭ по английскому языку: 38 письменных заданий + устная часть (4 задания,
+// сдаётся в отдельный день) — своя нумерация продолжает письменную (39–42),
+// чтобы не столкнуться по (exam, kimNumber): в реальном ЕГЭ у устной части
+// тоже задания 1–4, но это отдельная пересдача, официальный номер — в title.
+const EGE_ENG: SeedTopic[] = [
+  { n: 1, section: "Аудирование", title: "Аудирование: соответствие высказываний утверждениям (True/False/Not stated)" },
+  { n: 2, section: "Аудирование", title: "Аудирование: понимание запрашиваемой информации в диалоге (True/False/Not stated)" },
+  { n: 3, section: "Аудирование", title: "Аудирование: полное понимание текста, выбор из 3 вариантов (текст 1)" },
+  { n: 4, section: "Аудирование", title: "Аудирование: полное понимание текста, выбор из 3 вариантов (текст 2)" },
+  { n: 5, section: "Аудирование", title: "Аудирование: полное понимание текста, выбор из 3 вариантов (текст 3)" },
+  { n: 6, section: "Аудирование", title: "Аудирование: полное понимание текста, выбор из 3 вариантов (текст 4)" },
+  { n: 7, section: "Аудирование", title: "Аудирование: полное понимание текста, выбор из 3 вариантов (текст 5)" },
+  { n: 8, section: "Аудирование", title: "Аудирование: полное понимание текста, выбор из 3 вариантов (текст 6)" },
+  { n: 9, section: "Аудирование", title: "Аудирование: полное понимание текста, выбор из 3 вариантов (текст 7)" },
+  { n: 10, section: "Чтение", title: "Чтение: соответствие текстов заголовкам" },
+  { n: 11, section: "Чтение", title: "Чтение: структурно-смысловые связи (заполнение пропусков частями предложений)" },
+  { n: 12, section: "Чтение", title: "Чтение: полное понимание текста, выбор из 4 вариантов (текст 1)" },
+  { n: 13, section: "Чтение", title: "Чтение: полное понимание текста, выбор из 4 вариантов (текст 2)" },
+  { n: 14, section: "Чтение", title: "Чтение: полное понимание текста, выбор из 4 вариантов (текст 3)" },
+  { n: 15, section: "Чтение", title: "Чтение: полное понимание текста, выбор из 4 вариантов (текст 4)" },
+  { n: 16, section: "Чтение", title: "Чтение: полное понимание текста, выбор из 4 вариантов (текст 5)" },
+  { n: 17, section: "Чтение", title: "Чтение: полное понимание текста, выбор из 4 вариантов (текст 6)" },
+  { n: 18, section: "Чтение", title: "Чтение: полное понимание текста, выбор из 4 вариантов (текст 7)" },
+  { n: 19, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 1)" },
+  { n: 20, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 2)" },
+  { n: 21, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 3)" },
+  { n: 22, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 4)" },
+  { n: 23, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 5)" },
+  { n: 24, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 6)" },
+  { n: 25, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 1)" },
+  { n: 26, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 2)" },
+  { n: 27, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 3)" },
+  { n: 28, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 4)" },
+  { n: 29, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 5)" },
+  { n: 30, section: "Грамматика и лексика", title: "Лексика: выбор нужного слова по контексту (пропуск 1)" },
+  { n: 31, section: "Грамматика и лексика", title: "Лексика: выбор нужного слова по контексту (пропуск 2)" },
+  { n: 32, section: "Грамматика и лексика", title: "Лексика: выбор нужного слова по контексту (пропуск 3)" },
+  { n: 33, section: "Грамматика и лексика", title: "Лексика: выбор нужного слова по контексту (пропуск 4)" },
+  { n: 34, section: "Грамматика и лексика", title: "Лексика: выбор нужного слова по контексту (пропуск 5)" },
+  { n: 35, section: "Грамматика и лексика", title: "Лексика: выбор нужного слова по контексту (пропуск 6)" },
+  { n: 36, section: "Грамматика и лексика", title: "Лексика: выбор нужного слова по контексту (пропуск 7)" },
+  { n: 37, section: "Письменная речь", title: "Письмо: электронное письмо личного характера" },
+  { n: 38, section: "Письменная речь", title: "Письмо: развёрнутое высказывание с элементами рассуждения (по таблице/диаграмме)" },
+  { n: 39, section: "Устная часть", title: "Устная часть: чтение вслух фрагмента текста" },
+  { n: 40, section: "Устная часть", title: "Устная часть: условный диалог-расспрос (4 вопроса по объявлению)" },
+  { n: 41, section: "Устная часть", title: "Устная часть: ответы на вопросы интервью (5 вопросов)" },
+  { n: 42, section: "Устная часть", title: "Устная часть: монологическое высказывание — сравнение двух изображений" },
+];
+
+// ОГЭ по английскому языку: 35 письменных заданий + устная часть (3 задания).
+const OGE_ENG: SeedTopic[] = [
+  { n: 1, section: "Аудирование", title: "Аудирование: понимание запрашиваемой информации (текст 1)" },
+  { n: 2, section: "Аудирование", title: "Аудирование: понимание запрашиваемой информации (текст 2)" },
+  { n: 3, section: "Аудирование", title: "Аудирование: понимание запрашиваемой информации (текст 3)" },
+  { n: 4, section: "Аудирование", title: "Аудирование: понимание запрашиваемой информации (текст 4)" },
+  { n: 5, section: "Аудирование", title: "Аудирование: соответствие высказываний рубрикам" },
+  { n: 6, section: "Аудирование", title: "Аудирование: полное понимание текста, True/False/Not stated (текст 1)" },
+  { n: 7, section: "Аудирование", title: "Аудирование: полное понимание текста, True/False/Not stated (текст 2)" },
+  { n: 8, section: "Аудирование", title: "Аудирование: полное понимание текста, True/False/Not stated (текст 3)" },
+  { n: 9, section: "Аудирование", title: "Аудирование: полное понимание текста, True/False/Not stated (текст 4)" },
+  { n: 10, section: "Аудирование", title: "Аудирование: полное понимание текста, True/False/Not stated (текст 5)" },
+  { n: 11, section: "Аудирование", title: "Аудирование: полное понимание текста, True/False/Not stated (текст 6)" },
+  { n: 12, section: "Чтение", title: "Чтение: соответствие текстов заголовкам" },
+  { n: 13, section: "Чтение", title: "Чтение: полное понимание текста, True/False/Not stated (текст 1)" },
+  { n: 14, section: "Чтение", title: "Чтение: полное понимание текста, True/False/Not stated (текст 2)" },
+  { n: 15, section: "Чтение", title: "Чтение: полное понимание текста, True/False/Not stated (текст 3)" },
+  { n: 16, section: "Чтение", title: "Чтение: полное понимание текста, True/False/Not stated (текст 4)" },
+  { n: 17, section: "Чтение", title: "Чтение: полное понимание текста, True/False/Not stated (текст 5)" },
+  { n: 18, section: "Чтение", title: "Чтение: полное понимание текста, True/False/Not stated (текст 6)" },
+  { n: 19, section: "Чтение", title: "Чтение: полное понимание текста, True/False/Not stated (текст 7)" },
+  { n: 20, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 1)" },
+  { n: 21, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 2)" },
+  { n: 22, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 3)" },
+  { n: 23, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 4)" },
+  { n: 24, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 5)" },
+  { n: 25, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 6)" },
+  { n: 26, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 7)" },
+  { n: 27, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 8)" },
+  { n: 28, section: "Грамматика и лексика", title: "Грамматические навыки: преобразование формы слова (пропуск 9)" },
+  { n: 29, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 1)" },
+  { n: 30, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 2)" },
+  { n: 31, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 3)" },
+  { n: 32, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 4)" },
+  { n: 33, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 5)" },
+  { n: 34, section: "Грамматика и лексика", title: "Словообразование: преобразование слова по контексту (пропуск 6)" },
+  { n: 35, section: "Письменная речь", title: "Письмо: электронное письмо личного характера (100–120 слов)" },
+  { n: 36, section: "Устная часть", title: "Устная часть: чтение вслух фрагмента текста" },
+  { n: 37, section: "Устная часть", title: "Устная часть: условный диалог-расспрос (6 вопросов)" },
+  { n: 38, section: "Устная часть", title: "Устная часть: монологическое высказывание по плану" },
 ];
 
 // Общая школьная программа 5–11 класс (алгебра/геометрия), не привязана
@@ -199,12 +290,155 @@ const SCHOOL_PROGRAM: { grade: number; topics: SchoolTopic[] }[] = [
   { grade: 11, topics: GRADE_11 },
 ];
 
+// Общая программа английского: грамматика и речевые навыки — в отличие от
+// математики, не привязана к классу (в источнике нет разбивки по классам),
+// группируется по разделу (section). tutorId и grade остаются null, exam
+// тоже null — это отличает их от кодификатора (см. EGE_ENG/OGE_ENG выше).
+// Примечание: разделы «Аудирование»/«Чтение» здесь совпадают по названию
+// с разделами кодификатора — это два разных набора Topic-записей
+// (exam=null здесь, exam заполнен там), совпадение имён не создаёт
+// путаницы в БД, но имейте в виду при чтении кода.
+type EnglishTopic = { section: string; title: string };
+
+const ENGLISH_PARTS_OF_SPEECH: EnglishTopic[] = [
+  { section: "Части речи", title: "Существительное (исчисляемые и неисчисляемые, множественное число)" },
+  { section: "Части речи", title: "Артикли (a / an / the, нулевой артикль)" },
+  { section: "Части речи", title: "Местоимения (личные, притяжательные, указательные, возвратные, неопределённые)" },
+  { section: "Части речи", title: "Прилагательные (степени сравнения)" },
+  { section: "Части речи", title: "Наречия (образование, степени сравнения, место в предложении)" },
+  { section: "Части речи", title: "Числительные (количественные и порядковые)" },
+  { section: "Части речи", title: "Предлоги (места, времени, направления)" },
+  { section: "Части речи", title: "Союзы и связки" },
+  { section: "Части речи", title: "Словообразование (суффиксы, приставки, конверсия)" },
+];
+
+const ENGLISH_VERBS_TENSES: EnglishTopic[] = [
+  { section: "Глаголы и времена", title: "Глагол to be и to have" },
+  { section: "Глаголы и времена", title: "Present Simple (настоящее простое)" },
+  { section: "Глаголы и времена", title: "Present Continuous (настоящее длительное)" },
+  { section: "Глаголы и времена", title: "Present Perfect (настоящее совершённое)" },
+  { section: "Глаголы и времена", title: "Present Perfect Continuous" },
+  { section: "Глаголы и времена", title: "Past Simple (прошедшее простое)" },
+  { section: "Глаголы и времена", title: "Past Continuous (прошедшее длительное)" },
+  { section: "Глаголы и времена", title: "Past Perfect (прошедшее совершённое)" },
+  { section: "Глаголы и времена", title: "Future Simple и способы выражения будущего (will, be going to)" },
+  { section: "Глаголы и времена", title: "Согласование времён" },
+];
+
+const ENGLISH_SPECIAL_CONSTRUCTIONS: EnglishTopic[] = [
+  { section: "Особые конструкции", title: "Модальные глаголы (can, must, should, may, might и др.)" },
+  { section: "Особые конструкции", title: "Пассивный залог (Passive Voice)" },
+  { section: "Особые конструкции", title: "Условные предложения (Conditionals, типы 0–3)" },
+  { section: "Особые конструкции", title: "Косвенная речь (Reported Speech)" },
+  { section: "Особые конструкции", title: "Герундий и инфинитив" },
+  { section: "Особые конструкции", title: "Причастия I и II (Participle I и II)" },
+  { section: "Особые конструкции", title: "Фразовые глаголы (Phrasal Verbs)" },
+  { section: "Особые конструкции", title: "Конструкция there is / there are" },
+  { section: "Особые конструкции", title: "Оборот used to" },
+  { section: "Особые конструкции", title: "Question tags (разделительные вопросы)" },
+];
+
+const ENGLISH_SYNTAX: EnglishTopic[] = [
+  { section: "Синтаксис", title: "Порядок слов в предложении" },
+  { section: "Синтаксис", title: "Типы вопросов (общие, специальные, альтернативные, разделительные)" },
+  { section: "Синтаксис", title: "Утвердительные, отрицательные и вопросительные предложения" },
+  { section: "Синтаксис", title: "Сложносочинённые и сложноподчинённые предложения" },
+];
+
+const ENGLISH_LISTENING: EnglishTopic[] = [
+  { section: "Аудирование", title: "Понимание общего смысла" },
+  { section: "Аудирование", title: "Понимание запрашиваемой информации (детали)" },
+  { section: "Аудирование", title: "Полное понимание прослушанного текста" },
+  { section: "Аудирование", title: "Восприятие речи на слух в диалогах и монологах" },
+];
+
+const ENGLISH_SPEAKING: EnglishTopic[] = [
+  { section: "Говорение", title: "Монологическая речь (описание, рассказ, рассуждение)" },
+  { section: "Говорение", title: "Диалогическая речь (беседа, обмен мнениями)" },
+  { section: "Говорение", title: "Ведение дискуссии, выражение своего мнения" },
+  { section: "Говорение", title: "Произношение и интонация" },
+];
+
+const ENGLISH_READING: EnglishTopic[] = [
+  { section: "Чтение", title: "Просмотровое чтение (skimming)" },
+  { section: "Чтение", title: "Поисковое чтение (scanning)" },
+  { section: "Чтение", title: "Изучающее чтение с полным пониманием" },
+  { section: "Чтение", title: "Работа с текстами разных жанров" },
+];
+
+const ENGLISH_WRITING: EnglishTopic[] = [
+  { section: "Письмо", title: "Личное и деловое письмо" },
+  { section: "Письмо", title: "Электронное письмо (email)" },
+  { section: "Письмо", title: "Эссе (сочинение, изложение мнения)" },
+  { section: "Письмо", title: "Развёрнутое высказывание с элементами рассуждения" },
+  { section: "Письмо", title: "Заполнение анкет и форм" },
+];
+
+const ENGLISH_PROGRAM: EnglishTopic[] = [
+  ...ENGLISH_PARTS_OF_SPEECH,
+  ...ENGLISH_VERBS_TENSES,
+  ...ENGLISH_SPECIAL_CONSTRUCTIONS,
+  ...ENGLISH_SYNTAX,
+  ...ENGLISH_LISTENING,
+  ...ENGLISH_SPEAKING,
+  ...ENGLISH_READING,
+  ...ENGLISH_WRITING,
+];
+
+async function seedEnglishTopics() {
+  let count = 0;
+  let orderInSection = new Map<string, number>();
+  for (const t of ENGLISH_PROGRAM) {
+    const order = (orderInSection.get(t.section) ?? 0) + 1;
+    orderInSection.set(t.section, order);
+    const data = {
+      title: t.title,
+      subject: "ENGLISH" as const,
+      exam: null,
+      grade: null,
+      section: t.section,
+      order,
+    };
+    const existing = await prisma.topic.findFirst({
+      where: { tutorId: null, exam: null, subject: "ENGLISH", section: t.section, title: t.title },
+    });
+    if (existing) {
+      await prisma.topic.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.topic.create({ data });
+    }
+    count++;
+  }
+
+  // Разбор-катчер для английского — отдельная запись от математического
+  // «Другое» (та скопирована на subject: MATH, см. seedSchoolTopics).
+  const otherData = {
+    title: OTHER_TOPIC_TITLE,
+    subject: "ENGLISH" as const,
+    exam: null,
+    grade: null,
+    section: null,
+  };
+  const existingOther = await prisma.topic.findFirst({
+    where: { tutorId: null, exam: null, grade: null, subject: "ENGLISH", title: OTHER_TOPIC_TITLE },
+  });
+  if (existingOther) {
+    await prisma.topic.update({ where: { id: existingOther.id }, data: otherData });
+  } else {
+    await prisma.topic.create({ data: otherData });
+  }
+  count++;
+
+  console.log(`Английская программа (грамматика/речевые навыки): ${count} тем (включая «${OTHER_TOPIC_TITLE}»)`);
+}
+
 async function seedSchoolTopics() {
   let count = 0;
   for (const { grade, topics } of SCHOOL_PROGRAM) {
     for (const [i, t] of topics.entries()) {
       const data = {
         title: t.title,
+        subject: "MATH" as const,
         exam: null,
         grade,
         section: t.section ?? null,
@@ -222,10 +456,17 @@ async function seedSchoolTopics() {
     }
   }
 
-  // Общий разбор-катчер: не привязан к классу, один на весь кодификатор.
-  const otherData = { title: OTHER_TOPIC_TITLE, exam: null, grade: null, section: null };
+  // Общий разбор-катчер: не привязан к классу, один на весь кодификатор
+  // математики (у английского — своя отдельная запись, см. seedEnglishTopics).
+  const otherData = {
+    title: OTHER_TOPIC_TITLE,
+    subject: "MATH" as const,
+    exam: null,
+    grade: null,
+    section: null,
+  };
   const existingOther = await prisma.topic.findFirst({
-    where: { tutorId: null, exam: null, grade: null, title: OTHER_TOPIC_TITLE },
+    where: { tutorId: null, exam: null, grade: null, subject: "MATH", title: OTHER_TOPIC_TITLE },
   });
   if (existingOther) {
     await prisma.topic.update({ where: { id: existingOther.id }, data: otherData });
@@ -237,14 +478,20 @@ async function seedSchoolTopics() {
   console.log(`Школьная программа 5–11 класс: ${count} тем (включая «${OTHER_TOPIC_TITLE}»)`);
 }
 
-async function seedExam(exam: "EGE_PROF" | "EGE_BASE" | "OGE", topics: SeedTopic[]) {
+type ExamCode = "EGE_PROF" | "EGE_BASE" | "OGE" | "EGE_ENG" | "OGE_ENG";
+
+// subject выводится из exam (математические и английские коды не пересекаются),
+// но проставляем явно — не полагаемся на дефолт колонки (см. lib/schema.prisma).
+async function seedExam(exam: ExamCode, topics: SeedTopic[], subject: "MATH" | "ENGLISH" = "MATH") {
   for (const t of topics) {
-    const section = t.detailed
-      ? "Часть 2 (развёрнутый ответ)"
-      : "Часть 1 (краткий ответ)";
+    // У математики раздел выводится из detailed (2 варианта); у английского
+    // раздел передан явно в каждой теме (5 вариантов — см. ENGLISH-массивы).
+    const section =
+      t.section ?? (t.detailed ? "Часть 2 (развёрнутый ответ)" : "Часть 1 (краткий ответ)");
     const data = {
       title: t.title,
       exam,
+      subject,
       section,
       kimNumber: t.n,
       order: t.n,
@@ -266,6 +513,9 @@ async function main() {
   await seedExam("EGE_BASE", EGE_BASE);
   await seedExam("OGE", OGE);
   await seedSchoolTopics();
+  await seedExam("OGE_ENG", OGE_ENG, "ENGLISH");
+  await seedExam("EGE_ENG", EGE_ENG, "ENGLISH");
+  await seedEnglishTopics();
   const total = await prisma.topic.count();
   console.log(`Всего тем в базе: ${total}`);
 }
