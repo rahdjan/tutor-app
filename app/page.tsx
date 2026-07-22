@@ -258,8 +258,8 @@ export default function Home() {
           <span className="font-serif italic font-medium">.Платформа</span>
         </p>
         <p>
-          Бета-версия: платформа активно разрабатывается. Регистрация откроется
-          позже.
+          Бета-версия: платформа активно разрабатывается. Поддержка: 
+          kovshovsav@gmail.com.
         </p>
         <p>© {new Date().getFullYear()}</p>
       </footer>
