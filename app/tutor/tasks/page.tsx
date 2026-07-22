@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { MathText } from "@/components/math-text";
 import { formatTopicLabel } from "@/lib/curriculum-topics";
+import { visibleTopicsWhere } from "@/lib/topic-visibility";
 import type { AnswerType, Prisma } from "@/app/generated/prisma/client";
 
 export const metadata: Metadata = { title: "Банк задач" };
@@ -50,7 +51,7 @@ export default async function TasksPage({
       take: 200,
     }),
     prisma.topic.findMany({
-      where: { OR: [{ tutorId: null }, { tutorId }] },
+      where: visibleTopicsWhere(session.user),
       orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
       select: { id: true, title: true, exam: true, kimNumber: true, grade: true, section: true },
     }),

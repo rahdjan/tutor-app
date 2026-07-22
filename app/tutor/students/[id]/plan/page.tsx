@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { visibleTopicsWhere } from "@/lib/topic-visibility";
 import { PlanItemRow } from "./plan-item-row";
 import { AddTopicsForm } from "./add-topics-form";
 import { CustomTopicForm } from "./custom-topic-form";
@@ -42,7 +43,7 @@ export default async function PlanPage({
   // Темы для выбора: кодификатор ЕГЭ/ОГЭ + общая школьная программа
   // (5–11 класс, видна всем) + свои темы репетитора.
   const topics = await prisma.topic.findMany({
-    where: { OR: [{ tutorId: null }, { tutorId: session.user.id }] },
+    where: visibleTopicsWhere(session.user),
     orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
     select: {
       id: true,
@@ -56,11 +57,12 @@ export default async function PlanPage({
   });
   const addedTopicIds = new Set(items.map((i) => i.topicId));
 
+  const isEnglish = session.user.subject === "ENGLISH";
   const codifierTopics = topics.filter((t) => t.exam !== null);
   const schoolTopics = topics.filter((t) => t.exam === null && t.tutorId === null);
   const customTopics = topics.filter((t) => t.exam === null && t.tutorId !== null);
   const studentGradeKey =
-    student.grade && student.grade >= 5 && student.grade <= 11
+    !isEnglish && student.grade && student.grade >= 5 && student.grade <= 11
       ? String(student.grade)
       : null;
 
@@ -149,7 +151,7 @@ export default async function PlanPage({
               studentId={student.id}
               topics={schoolTopics}
               addedTopicIds={[...addedTopicIds]}
-              groupBy="grade"
+              groupBy={isEnglish ? "section" : "grade"}
               defaultOpenKey={studentGradeKey}
             />
           </section>

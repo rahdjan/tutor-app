@@ -7,7 +7,8 @@ import { requireTutor } from "@/lib/access";
 import { extractTasksWithAi, type AiDraft } from "@/lib/ai-import";
 import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
-import { OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
+import { resolveSubject } from "@/lib/topic-visibility";
+import type { Subject } from "@/app/generated/prisma/enums";
 
 export type AiImportState = {
   error?: string;
@@ -23,15 +24,12 @@ const ALLOWED_TYPES = [
   "image/webp",
 ];
 
-/** Заголовки общей школьной программы (5–11 класс) + «Другое» — список,
+/** Заголовки общей программы предмета (школьная 5–11 класс для математики,
+ * категории грамматики/речевых навыков для английского) + «Другое» — список,
  * по которому модель классифицирует задачи (см. lib/ai-import.ts). */
-async function schoolTopicTitles(): Promise<string[]> {
+async function curriculumTopicTitles(subject: Subject): Promise<string[]> {
   const topics = await prisma.topic.findMany({
-    where: {
-      tutorId: null,
-      exam: null,
-      OR: [{ grade: { not: null } }, { title: OTHER_TOPIC_TITLE }],
-    },
+    where: { tutorId: null, exam: null, subject },
     select: { title: true },
     orderBy: [{ grade: "asc" }, { order: "asc" }],
   });
@@ -57,7 +55,7 @@ export async function aiExtract(
 
   const pastedText = String(formData.get("text") ?? "").trim();
   const file = formData.get("file");
-  const topics = await schoolTopicTitles();
+  const topics = await curriculumTopicTitles(resolveSubject(session.user));
 
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_FILE) {

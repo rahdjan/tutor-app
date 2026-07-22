@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { topicCode } from "@/lib/task-codes";
 import { formatTopicLabel, OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
+import { visibleTopicsWhere } from "@/lib/topic-visibility";
 import { AiImportFlow } from "./ai-import-flow";
 
 export const metadata: Metadata = { title: "ИИ-импорт задач" };
@@ -14,7 +15,7 @@ export default async function AiImportPage() {
 
   // Темы для выпадающего списка (код темы → подпись)
   const topics = await prisma.topic.findMany({
-    where: { OR: [{ tutorId: null }, { tutorId: session.user.id }] },
+    where: visibleTopicsWhere(session.user),
     orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
     select: { id: true, title: true, exam: true, kimNumber: true, grade: true, section: true, tutorId: true },
   });

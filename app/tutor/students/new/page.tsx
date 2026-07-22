@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireTutor } from "@/lib/access";
 import { createStudent } from "@/app/actions/students";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { resolveSubject } from "@/lib/topic-visibility";
 import { StudentForm } from "../student-form";
 
 export const metadata: Metadata = { title: "Новый ученик" };
@@ -22,7 +23,11 @@ export default async function NewStudentPage() {
       </h1>
 
       <div className="window-card max-w-xl p-6">
-        <StudentForm action={createStudent} submitLabel="Добавить ученика" />
+        <StudentForm
+          action={createStudent}
+          subject={resolveSubject(session.user)}
+          submitLabel="Добавить ученика"
+        />
       </div>
     </div>
   );

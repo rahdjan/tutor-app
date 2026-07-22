@@ -3,8 +3,7 @@
 import { useActionState } from "react";
 import type { FormState } from "@/app/actions/auth";
 import { addPlanTopics } from "@/app/actions/plan";
-import { EXAM_LABELS } from "@/lib/labels";
-import { OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
+import { topicGroupKey, topicGroupLabel, type TopicGroupBy } from "@/lib/topic-groups";
 import type { Exam } from "@/app/generated/prisma/enums";
 
 type TopicOption = {
@@ -16,20 +15,6 @@ type TopicOption = {
   section?: string | null;
   tutorId?: string | null;
 };
-
-// Функции нельзя передать из серверного компонента в клиентский — поэтому
-// группировка выбирается сериализуемым флагом, а не колбэком пропом.
-function groupKeyOf(t: TopicOption, groupBy?: "exam" | "grade"): string {
-  if (groupBy === "exam") return t.exam ?? "_";
-  if (groupBy === "grade") return t.grade ? String(t.grade) : "other";
-  return "_";
-}
-
-function groupLabelOf(key: string, groupBy?: "exam" | "grade"): string {
-  if (groupBy === "exam") return EXAM_LABELS[key as Exam];
-  if (groupBy === "grade") return key === "other" ? OTHER_TOPIC_TITLE : `${key} класс`;
-  return key;
-}
 
 // Выбор тем чекбоксами, сгруппированных в сворачиваемые блоки (или без
 // группировки, если groupBy не задан/compact) — переиспользуется и для
@@ -46,7 +31,7 @@ export function AddTopicsForm({
   studentId: string;
   topics: TopicOption[];
   addedTopicIds: string[];
-  groupBy?: "exam" | "grade";
+  groupBy?: TopicGroupBy;
   defaultOpenKey?: string | null;
   compact?: boolean;
 }) {
@@ -58,7 +43,7 @@ export function AddTopicsForm({
 
   const groups = new Map<string, TopicOption[]>();
   for (const t of topics) {
-    const key = groupKeyOf(t, groupBy);
+    const key = topicGroupKey(t, groupBy);
     const list = groups.get(key) ?? [];
     list.push(t);
     groups.set(key, list);
@@ -99,7 +84,7 @@ export function AddTopicsForm({
         return (
           <details key={key} open={key === defaultOpenKey}>
             <summary className="cursor-pointer text-sm font-bold">
-              {groupLabelOf(key, groupBy)}{" "}
+              {topicGroupLabel(key, groupBy)}{" "}
               <span className="font-normal text-muted">({list.length})</span>
             </summary>
             {body}

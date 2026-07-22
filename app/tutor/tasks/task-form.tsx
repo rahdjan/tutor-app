@@ -13,6 +13,7 @@ export type TopicOption = {
   exam: Exam | null;
   kimNumber: number | null;
   grade: number | null;
+  section: string | null;
   tutorId: string | null;
 };
 
@@ -89,21 +90,35 @@ export function TaskForm({
   );
   const [answerType, setAnswerType] = useState(initial.answerType ?? "SHORT");
 
-  // Разделение: ЕГЭ/ОГЭ (exam заполнен) / общая школьная программа
-  // (exam=null, tutorId=null, тема сидится для всех) / свои темы репетитора
-  // (exam=null, tutorId заполнен).
+  // Разделение: ЕГЭ/ОГЭ (exam заполнен) / общая программа предмета
+  // (exam=null, tutorId=null, тема сидится для всех — по классу у
+  // математики, по разделу у английского) / свои темы репетитора
+  // (exam=null, tutorId заполнен). Список topics уже отфильтрован по
+  // предмету репетитора выше по стеку (см. lib/topic-visibility.ts), так
+  // что порядок экзаменов ниже берём из самих данных, а не хардкодим.
   const codifier = topics.filter((t) => t.exam !== null);
   const school = topics.filter((t) => t.exam === null && t.tutorId === null);
   const custom = topics.filter((t) => t.exam === null && t.tutorId !== null);
-  const schoolByGrade = new Map<number | null, TopicOption[]>();
+
+  const exams = [...new Set(codifier.map((t) => t.exam!))];
+  const schoolByGrade = new Map<number, TopicOption[]>();
+  const schoolBySection = new Map<string, TopicOption[]>();
+  let otherTopic: TopicOption | undefined;
   for (const t of school) {
-    const list = schoolByGrade.get(t.grade) ?? [];
-    list.push(t);
-    schoolByGrade.set(t.grade, list);
+    if (t.grade) {
+      const list = schoolByGrade.get(t.grade) ?? [];
+      list.push(t);
+      schoolByGrade.set(t.grade, list);
+    } else if (t.section) {
+      const list = schoolBySection.get(t.section) ?? [];
+      list.push(t);
+      schoolBySection.set(t.section, list);
+    } else if (t.title === OTHER_TOPIC_TITLE) {
+      otherTopic = t;
+    }
   }
-  const grades = [...schoolByGrade.keys()]
-    .filter((g): g is number => g !== null)
-    .sort((a, b) => a - b);
+  const grades = [...schoolByGrade.keys()].sort((a, b) => a - b);
+  const sections = [...schoolBySection.keys()];
 
   return (
     <form action={formAction} className="space-y-5">
@@ -202,19 +217,21 @@ export function TaskForm({
                 ))}
               </optgroup>
             ))}
-            {schoolByGrade.get(null) && (
+            {sections.map((section) => (
+              <optgroup key={section} label={section}>
+                {schoolBySection.get(section)!.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+            {otherTopic && (
               <optgroup label="Школьная программа">
-                {schoolByGrade
-                  .get(null)!
-                  .filter((t) => t.title === OTHER_TOPIC_TITLE)
-                  .map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title}
-                    </option>
-                  ))}
+                <option value={otherTopic.id}>{otherTopic.title}</option>
               </optgroup>
             )}
-            {(["EGE_PROF", "EGE_BASE", "OGE"] as Exam[]).map((exam) => (
+            {exams.map((exam) => (
               <optgroup key={exam} label={EXAM_LABELS[exam]}>
                 {codifier
                   .filter((t) => t.exam === exam)

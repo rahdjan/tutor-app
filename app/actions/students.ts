@@ -9,15 +9,17 @@ import { prisma } from "@/lib/prisma";
 import { requireTutor } from "@/lib/access";
 import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
 import type { Goal } from "@/app/generated/prisma/enums";
-import { GOALS } from "@/lib/labels";
+import { GOALS_BY_SUBJECT } from "@/lib/labels";
+import { resolveSubject } from "@/lib/topic-visibility";
 import type { FormState } from "@/app/actions/auth";
 
-function readStudentFields(formData: FormData) {
+function readStudentFields(formData: FormData, subject: ReturnType<typeof resolveSubject>) {
   const name = String(formData.get("name") ?? "").trim();
   const gradeRaw = String(formData.get("grade") ?? "").trim();
   const grade = gradeRaw ? Number(gradeRaw) : null;
   const goalRaw = String(formData.get("goal") ?? "OTHER");
-  const goal = (GOALS as string[]).includes(goalRaw) ? (goalRaw as Goal) : "OTHER";
+  const allowedGoals = GOALS_BY_SUBJECT[subject] as string[];
+  const goal = allowedGoals.includes(goalRaw) ? (goalRaw as Goal) : "OTHER";
   const examDateRaw = String(formData.get("examDate") ?? "").trim();
   const examDate = examDateRaw ? new Date(examDateRaw) : null;
   const notes = String(formData.get("notes") ?? "").trim() || null;
@@ -31,7 +33,7 @@ export async function createStudent(
   formData: FormData,
 ): Promise<FormState> {
   const session = await requireTutor();
-  const fields = readStudentFields(formData);
+  const fields = readStudentFields(formData, resolveSubject(session.user));
   if (!fields.name) return { error: "Укажите имя или метку ученика." };
   if (fields.grade !== null && (fields.grade < 1 || fields.grade > 11)) {
     return { error: "Класс — число от 1 до 11." };
@@ -53,7 +55,7 @@ export async function updateStudent(
 ): Promise<FormState> {
   const session = await requireTutor();
   const id = String(formData.get("id") ?? "");
-  const fields = readStudentFields(formData);
+  const fields = readStudentFields(formData, resolveSubject(session.user));
   if (!fields.name) return { error: "Укажите имя или метку ученика." };
   if (fields.grade !== null && (fields.grade < 1 || fields.grade > 11)) {
     return { error: "Класс — число от 1 до 11." };

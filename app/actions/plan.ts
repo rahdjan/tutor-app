@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireTutor } from "@/lib/access";
+import { resolveSubject, visibleTopicsWhere } from "@/lib/topic-visibility";
 import type { FormState } from "@/app/actions/auth";
 import type { PlanStatus } from "@/app/generated/prisma/enums";
 
@@ -43,12 +44,9 @@ export async function addPlanTopics(
   const topicIds = formData.getAll("topicIds").map(String).filter(Boolean);
   if (topicIds.length === 0) return { error: "Отметьте хотя бы одну тему." };
 
-  // Берём только доступные темы: общий кодификатор или свои.
+  // Берём только доступные темы: общий кодификатор своего предмета или свои.
   const topics = await prisma.topic.findMany({
-    where: {
-      id: { in: topicIds },
-      OR: [{ tutorId: null }, { tutorId: ctx.session.user.id }],
-    },
+    where: { id: { in: topicIds }, ...visibleTopicsWhere(ctx.session.user) },
     select: { id: true },
   });
 
@@ -82,7 +80,11 @@ export async function addCustomTopic(
   if (!ctx) return { error: "Карточка не найдена." };
 
   const topic = await prisma.topic.create({
-    data: { title, tutorId: ctx.session.user.id },
+    data: {
+      title,
+      tutorId: ctx.session.user.id,
+      subject: resolveSubject(ctx.session.user),
+    },
   });
   const last = await prisma.planItem.findFirst({
     where: { planId: ctx.plan.id },

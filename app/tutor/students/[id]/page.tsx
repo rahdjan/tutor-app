@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { updateStudent, createStudentInvite } from "@/app/actions/students";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { CopyButton } from "@/components/copy-button";
+import { resolveSubject } from "@/lib/topic-visibility";
 import { StudentForm } from "../student-form";
 import { InviteButton } from "./invite-button";
 
@@ -80,6 +81,7 @@ export default async function StudentCardPage({
           <p className="eyebrow mb-4 text-muted">• Данные</p>
           <StudentForm
             action={updateStudent}
+            subject={resolveSubject(session.user)}
             initial={student}
             submitLabel="Сохранить"
           />

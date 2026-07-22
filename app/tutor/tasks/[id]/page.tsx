@@ -5,6 +5,7 @@ import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { updateTask } from "@/app/actions/tasks";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { visibleTopicsWhere } from "@/lib/topic-visibility";
 import { TaskForm } from "../task-form";
 import { DeleteTaskButton } from "./delete-button";
 
@@ -25,9 +26,17 @@ export default async function TaskPage({
   if (!task) notFound();
 
   const topics = await prisma.topic.findMany({
-    where: { OR: [{ tutorId: null }, { tutorId: session.user.id }] },
+    where: visibleTopicsWhere(session.user),
     orderBy: [{ exam: "asc" }, { order: "asc" }],
-    select: { id: true, title: true, exam: true, kimNumber: true, grade: true, tutorId: true },
+    select: {
+      id: true,
+      title: true,
+      exam: true,
+      kimNumber: true,
+      grade: true,
+      section: true,
+      tutorId: true,
+    },
   });
 
   return (

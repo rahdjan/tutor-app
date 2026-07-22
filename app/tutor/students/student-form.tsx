@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import type { FormState } from "@/app/actions/auth";
-import { GOAL_LABELS, GOALS } from "@/lib/labels";
+import { GOAL_LABELS, GOALS_BY_SUBJECT } from "@/lib/labels";
+import type { Subject } from "@/app/generated/prisma/enums";
 
 type StudentValues = {
   id?: string;
@@ -17,13 +18,16 @@ type StudentValues = {
 // Форма карточки ученика: одна на добавление и редактирование.
 export function StudentForm({
   action,
+  subject,
   initial = {},
   submitLabel,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
+  subject: Subject;
   initial?: StudentValues;
   submitLabel: string;
 }) {
+  const goals = GOALS_BY_SUBJECT[subject];
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     action,
     {},
@@ -73,7 +77,7 @@ export function StudentForm({
             defaultValue={initial.goal ?? "OTHER"}
             className="input"
           >
-            {GOALS.map((g) => (
+            {goals.map((g) => (
               <option key={g} value={g}>
                 {GOAL_LABELS[g]}
               </option>

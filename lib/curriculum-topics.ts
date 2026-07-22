@@ -27,5 +27,10 @@ export function formatTopicLabel(topic: {
       ? `${topic.grade} класс · ${topic.section} · ${topic.title}`
       : `${topic.grade} класс · ${topic.title}`;
   }
+  // Общая тема без класса, но с разделом — английская программа
+  // (Части речи, Аудирование и т.п.), не привязанная к классу.
+  if (topic.section) {
+    return `${topic.section} · ${topic.title}`;
+  }
   return topic.title;
 }

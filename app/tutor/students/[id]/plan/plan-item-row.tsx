@@ -51,6 +51,7 @@ export function PlanItemRow({
   if (item.exam && item.kimNumber) badge = `${EXAM_LABELS[item.exam]} №${item.kimNumber}`;
   else if (item.exam) badge = EXAM_LABELS[item.exam];
   else if (item.grade) badge = item.section ? `${item.grade} класс · ${item.section}` : `${item.grade} класс`;
+  else if (item.section) badge = item.section;
   else if (item.tutorId === null) badge = "школьная программа";
   else badge = "своя тема";
 

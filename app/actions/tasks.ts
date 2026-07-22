@@ -8,6 +8,7 @@ import { requireTutor } from "@/lib/access";
 import { parseTopicCode } from "@/lib/task-codes";
 import { consumeRateLimit, retryHint } from "@/lib/rate-limit";
 import { OTHER_TOPIC_TITLE } from "@/lib/curriculum-topics";
+import { resolveSubject, visibleTopicsWhere } from "@/lib/topic-visibility";
 import type { AnswerType } from "@/app/generated/prisma/enums";
 import type { FormState } from "@/app/actions/auth";
 
@@ -32,11 +33,14 @@ function readTaskFields(formData: FormData) {
   return { statement, answerType, answer, solution, difficulty, source, tags, topicId };
 }
 
-/** Тема доступна репетитору: из общего кодификатора или своя. */
-async function resolveAllowedTopicId(topicId: string | null, tutorId: string) {
+/** Тема доступна репетитору: из общего кодификатора его предмета или своя. */
+async function resolveAllowedTopicId(
+  topicId: string | null,
+  user: { id: string; subject?: string | null },
+) {
   if (!topicId) return null;
   const topic = await prisma.topic.findFirst({
-    where: { id: topicId, OR: [{ tutorId: null }, { tutorId }] },
+    where: { id: topicId, ...visibleTopicsWhere(user) },
     select: { id: true },
   });
   return topic?.id ?? null;
@@ -56,7 +60,7 @@ export async function createTask(
   await prisma.task.create({
     data: {
       ...fields,
-      topicId: await resolveAllowedTopicId(fields.topicId, session.user.id),
+      topicId: await resolveAllowedTopicId(fields.topicId, session.user),
       tutorId: session.user.id,
     },
   });
@@ -79,7 +83,7 @@ export async function updateTask(
     where: { id, tutorId: session.user.id },
     data: {
       ...fields,
-      topicId: await resolveAllowedTopicId(fields.topicId, session.user.id),
+      topicId: await resolveAllowedTopicId(fields.topicId, session.user),
     },
   });
   if (updated.count === 0) return { error: "Задача не найдена." };
@@ -121,6 +125,7 @@ export async function importTasksJson(
 ): Promise<ImportReport> {
   const session = await requireTutor();
   const tutorId = session.user.id;
+  const subject = resolveSubject(session.user);
 
   const limit = await consumeRateLimit(`import:${tutorId}`, { windowSec: 3600, max: 10 });
   if (!limit.allowed) {
@@ -188,21 +193,22 @@ export async function importTasksJson(
             where: { tutorId, title: ref.customTitle },
           })) ??
           (await prisma.topic.create({
-            data: { title: ref.customTitle, tutorId },
+            data: { title: ref.customTitle, tutorId, subject },
           }));
         topicId = topic.id;
       } else if ("generalTitle" in ref) {
-        // Общая тема школьной программы: ищем только среди общих (tutorId
-        // null), не создаём — если не нашлась, откатываемся на «Другое»
-        // вместо того, чтобы оставить задачу совсем без темы.
+        // Общая тема программы предмета: ищем только среди общих (tutorId
+        // null) в рамках предмета репетитора, не создаём — если не нашлась,
+        // откатываемся на «Другое» этого же предмета вместо того, чтобы
+        // оставить задачу совсем без темы.
         const topic = await prisma.topic.findFirst({
-          where: { tutorId: null, exam: null, title: ref.generalTitle },
+          where: { tutorId: null, exam: null, subject, title: ref.generalTitle },
         });
         if (topic) {
           topicId = topic.id;
         } else {
           const other = await prisma.topic.findFirst({
-            where: { tutorId: null, exam: null, title: OTHER_TOPIC_TITLE },
+            where: { tutorId: null, exam: null, subject, title: OTHER_TOPIC_TITLE },
           });
           if (other) topicId = other.id;
           else problems.push(`№${i + 1}: тема «${code}» не найдена, задача без темы`);

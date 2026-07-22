@@ -5,6 +5,7 @@ import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { formatTopicLabel } from "@/lib/curriculum-topics";
+import { visibleTopicsWhere } from "@/lib/topic-visibility";
 import {
   AddBankForm,
   AssignForm,
@@ -68,7 +69,7 @@ export default async function WorksheetPage({
   });
 
   const topics = await prisma.topic.findMany({
-    where: { OR: [{ tutorId: null }, { tutorId }] },
+    where: visibleTopicsWhere(session.user),
     orderBy: [{ exam: "asc" }, { grade: "asc" }, { order: "asc" }],
     select: { id: true, title: true, exam: true, kimNumber: true, grade: true, section: true },
   });
