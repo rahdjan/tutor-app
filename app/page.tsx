@@ -93,7 +93,7 @@ export default function Home() {
       <section className="grid items-center gap-10 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
         <div>
           <p className="eyebrow mb-5 text-muted">
-            • Платформа для репетиторов по математике
+            • Платформа для репетиторов по математике и английскому
           </p>
           <h1 className="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Вся подготовка к{" "}
@@ -121,7 +121,7 @@ export default function Home() {
           <div className="window-card rotate-[-1.5deg]">
             {windowDots}
             <div className="p-5">
-              <p className="eyebrow text-muted">Задача · ЕГЭ профиль · №12</p>
+              <p className="eyebrow text-muted">Задача · 8 класс · Виета</p>
               <p className="mt-3 text-lg font-semibold">
                 Решите уравнение: x² − 5x + 6 = 0
               </p>
