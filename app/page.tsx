@@ -259,7 +259,7 @@ export default function Home() {
         </p>
         <p>
           Бета-версия: платформа активно разрабатывается. Поддержка: 
-          kovshovsav@gmail.com.
+          {`mailto:$kovshovsav@gmail.com`}
         </p>
         <p>© {new Date().getFullYear()}</p>
       </footer>
