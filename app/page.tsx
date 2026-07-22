@@ -258,8 +258,10 @@ export default function Home() {
           <span className="font-serif italic font-medium">.Платформа</span>
         </p>
         <p>
-          Бета-версия: платформа активно разрабатывается. Поддержка: 
-          {`mailto:$kovshovsav@gmail.com`}
+          Бета-версия: платформа активно разрабатывается. Поддержка:{" "}
+          <a href="mailto:kovshovsav@gmail.com" className="underline">
+            kovshovsav@gmail.com
+          </a>
         </p>
         <p>© {new Date().getFullYear()}</p>
       </footer>
