@@ -53,9 +53,10 @@ export async function aiExtract(
     return { error: `Дневной лимит ИИ-импорта исчерпан. ${retryHint(daily.retryAfterSec)}` };
   }
 
+  const subject = resolveSubject(session.user);
   const pastedText = String(formData.get("text") ?? "").trim();
   const file = formData.get("file");
-  const topics = await curriculumTopicTitles(resolveSubject(session.user));
+  const topics = await curriculumTopicTitles(subject);
 
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_FILE) {
@@ -67,13 +68,14 @@ export async function aiExtract(
     }
     if (mime === "text/plain") {
       const text = await file.text();
-      const result = await extractTasksWithAi({ text, topics });
+      const result = await extractTasksWithAi({ text, topics, subject });
       return result.ok ? { drafts: result.drafts } : { error: result.error };
     }
     const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
     const result = await extractTasksWithAi({
       file: { mimeType: mime, base64 },
       topics,
+      subject,
     });
     return result.ok ? { drafts: result.drafts } : { error: result.error };
   }
@@ -84,6 +86,6 @@ export async function aiExtract(
   if (pastedText.length > 100_000) {
     return { error: "Текст слишком длинный — разбейте на части." };
   }
-  const result = await extractTasksWithAi({ text: pastedText, topics });
+  const result = await extractTasksWithAi({ text: pastedText, topics, subject });
   return result.ok ? { drafts: result.drafts } : { error: result.error };
 }
