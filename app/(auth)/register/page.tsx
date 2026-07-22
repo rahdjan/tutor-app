@@ -3,7 +3,7 @@ import Link from "next/link";
 import { TutorRegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
-  title: "Регистрация репетитора — Платформа.Репетитор",
+  title: "Регистрация репетитора — Репетитор.Платформа",
 };
 
 export default function RegisterPage() {

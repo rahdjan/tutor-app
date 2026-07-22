@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { StudentRegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
-  title: "Регистрация по приглашению — Платформа.Репетитор",
+  title: "Регистрация по приглашению — Репетитор.Платформа",
 };
 
 export default async function InvitePage({
@@ -24,7 +24,7 @@ export default async function InvitePage({
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-8">
       <Link href="/" className="mb-10 text-center text-lg font-bold tracking-tight">
-        Платформа.<span className="font-serif italic font-medium">Репетитор</span>
+        Репетитор<span className="font-serif italic font-medium">.Платформа</span>
       </Link>
 
       {valid ? (

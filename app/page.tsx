@@ -76,8 +76,8 @@ export default function Home() {
       {/* Верхняя панель */}
       <header className="flex items-center justify-between py-5">
         <div className="text-lg font-bold tracking-tight">
-          Платформа.
-          <span className="font-serif italic font-medium">Репетитор</span>
+          Репетитор
+          <span className="font-serif italic font-medium">.Платформа</span>
         </div>
         <nav className="flex items-center gap-3">
           <a href="/login" className="btn-pill bg-paper hidden sm:inline-flex">
@@ -254,8 +254,8 @@ export default function Home() {
       {/* Футер */}
       <footer className="flex flex-col items-center gap-2 py-10 text-center text-sm text-muted">
         <p className="font-bold text-ink">
-          Платформа.
-          <span className="font-serif italic font-medium">Репетитор</span>
+          Репетитор
+          <span className="font-serif italic font-medium">.Платформа</span>
         </p>
         <p>
           Бета-версия: платформа активно разрабатывается. Регистрация откроется
