@@ -5,6 +5,7 @@ import { requireStudent } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { MathText } from "@/components/math-text";
+import { effectiveScore } from "@/lib/answers";
 import { TaskAnswer } from "./task-answer";
 import { FinishForm } from "./finish-form";
 
@@ -43,18 +44,24 @@ export default async function AssignmentPage({
     (submission?.entries ?? []).map((e) => [e.taskId, e]),
   );
 
-  const autoPoints = (submission?.entries ?? []).reduce(
-    (s, e) => s + (e.autoScore ?? 0),
-    0,
-  );
-  const manualPoints = (submission?.entries ?? []).reduce(
-    (s, e) => s + (e.manualScore ?? 0),
-    0,
-  );
-  const graded = (submission?.entries ?? []).some((e) => e.manualScore !== null);
-  const shortTotal = assignment.worksheet.tasks.filter(
-    (t) => t.task.answerType === "SHORT",
-  ).length;
+  // Короткие/развёрнутые считаем раздельно; effectiveScore учитывает
+  // переопределение репетитора у коротких ответов, если оно есть.
+  let shortCorrect = 0;
+  let shortTotal = 0;
+  let shortOverridden = false;
+  let detailedPoints = 0;
+  let detailedGraded = 0;
+  for (const wt of assignment.worksheet.tasks) {
+    const entry = entryByTask.get(wt.taskId);
+    if (wt.task.answerType === "SHORT") {
+      shortTotal++;
+      if (entry && effectiveScore(entry) === 1) shortCorrect++;
+      if (entry?.manualScore !== null && entry?.manualScore !== undefined) shortOverridden = true;
+    } else if (entry?.manualScore !== null && entry?.manualScore !== undefined) {
+      detailedGraded++;
+      detailedPoints += entry.manualScore;
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl px-5 pb-16">
@@ -80,10 +87,13 @@ export default async function AssignmentPage({
             {submission!.submittedAt!.toLocaleDateString("ru-RU")} ✓
           </p>
           <p className="mt-1 text-[#40662f]">
-            Автопроверка: {autoPoints} из {shortTotal}
-            {graded
-              ? ` · Баллы репетитора: ${manualPoints}`
-              : " · Развёрнутые ответы ждут проверки репетитора"}
+            Короткие ответы: {shortCorrect} из {shortTotal}
+            {shortOverridden ? " (проверено репетитором)" : ""}
+            {detailedGraded > 0
+              ? ` · Баллы за развёрнутые: ${detailedPoints}`
+              : assignment.worksheet.tasks.some((t) => t.task.answerType === "DETAILED")
+                ? " · Развёрнутые ответы ждут проверки репетитора"
+                : ""}
           </p>
         </div>
       )}

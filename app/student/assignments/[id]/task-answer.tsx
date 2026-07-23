@@ -5,6 +5,7 @@
 // DETAILED: текст решения и/или фото — уходит репетитору.
 import { useActionState, useState } from "react";
 import { saveAnswer, type AnswerState } from "@/app/actions/submissions";
+import { effectiveScore } from "@/lib/answers";
 
 // Сжимаем фото в браузере: Vercel не пропускает запросы больше 4,5 МБ,
 // а фото с камеры обычно тяжелее. Для проверки решения хватит 2000 px.
@@ -65,13 +66,16 @@ export function TaskAnswer({
   );
   const [compressing, setCompressing] = useState(false);
 
-  // Итог для показа: свежий результат из action или сохранённый из БД
+  // Итог для показа: свежий результат из action или сохранённый из БД.
+  // effectiveScore учитывает переопределение репетитора, если оно есть.
   const shortResult =
     state.correct !== undefined && state.correct !== null
       ? state.correct
-      : entry?.autoScore !== null && entry?.autoScore !== undefined
-        ? entry.autoScore === 1
+      : entry
+        ? effectiveScore(entry) === 1
         : null;
+  const shortOverridden =
+    entry?.manualScore !== null && entry?.manualScore !== undefined;
 
   if (submitted) {
     return (
@@ -91,11 +95,16 @@ export function TaskAnswer({
               </p>
             )}
             {answerType === "SHORT" ? (
-              shortResult ? (
-                <p className="font-semibold text-[#4d7a3a]">Верно ✓ (1 балл)</p>
-              ) : (
-                <p className="font-semibold text-[#8f3a25]">Неверно ✗ (0 баллов)</p>
-              )
+              <p
+                className={`font-semibold ${shortResult ? "text-[#4d7a3a]" : "text-[#8f3a25]"}`}
+              >
+                {shortResult ? "Верно ✓ (1 балл)" : "Неверно ✗ (0 баллов)"}
+                {shortOverridden && (
+                  <span className="ml-1 font-normal text-muted">
+                    (проверено репетитором)
+                  </span>
+                )}
+              </p>
             ) : entry.manualScore !== null ? (
               <p className="font-semibold text-[#4d7a3a]">
                 Балл репетитора: {entry.manualScore}

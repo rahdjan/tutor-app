@@ -5,6 +5,7 @@ import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { EXAM_LABELS } from "@/lib/labels";
+import { effectiveScore } from "@/lib/answers";
 
 export const metadata: Metadata = { title: "Статистика ученика" };
 
@@ -70,7 +71,7 @@ export default async function StatsPage({
       { label, shortTotal: 0, shortCorrect: 0, detailedCount: 0, detailedPoints: 0 };
     if (e.task.answerType === "SHORT") {
       stat.shortTotal += 1;
-      if (e.autoScore === 1) stat.shortCorrect += 1;
+      if (effectiveScore(e) === 1) stat.shortCorrect += 1;
     } else {
       stat.detailedCount += 1;
       stat.detailedPoints += e.manualScore ?? 0;
@@ -110,7 +111,7 @@ export default async function StatsPage({
       };
     if (e.task.answerType === "SHORT") {
       stat.shortTotal += 1;
-      if (e.autoScore === 1) stat.shortCorrect += 1;
+      if (effectiveScore(e) === 1) stat.shortCorrect += 1;
     } else {
       stat.manualPoints += e.manualScore ?? 0;
     }

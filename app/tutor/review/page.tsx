@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { effectiveScore } from "@/lib/answers";
 
 export const metadata: Metadata = { title: "Проверка работ" };
 
@@ -32,9 +33,8 @@ export default async function ReviewListPage() {
   const withStatus = submissions.map((s) => {
     const detailed = s.entries.filter((e) => e.task.answerType === "DETAILED");
     const ungraded = detailed.filter((e) => e.manualScore === null).length;
-    const autoPoints = s.entries.reduce((sum, e) => sum + (e.autoScore ?? 0), 0);
-    const manualPoints = s.entries.reduce((sum, e) => sum + (e.manualScore ?? 0), 0);
-    return { s, ungraded, needsReview: ungraded > 0, autoPoints, manualPoints };
+    const totalPoints = s.entries.reduce((sum, e) => sum + effectiveScore(e), 0);
+    return { s, ungraded, needsReview: ungraded > 0, totalPoints };
   });
   const pending = withStatus.filter((x) => x.needsReview);
   const done = withStatus.filter((x) => !x.needsReview);
@@ -60,7 +60,7 @@ export default async function ReviewListPage() {
             </span>
           ) : (
             <span className="text-sm text-[#4d7a3a]">
-              проверено ✓ · {item.autoPoints + item.manualPoints} баллов
+              проверено ✓ · {item.totalPoints} баллов
             </span>
           )}
         </div>

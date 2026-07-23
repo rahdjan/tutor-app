@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireStudent } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { effectiveScore } from "@/lib/answers";
 
 export const metadata: Metadata = { title: "Кабинет ученика" };
 
@@ -70,12 +71,8 @@ export default async function StudentPage() {
             const sub = a.submissions[0];
             const total = a.worksheet._count.tasks;
             const answered = sub?.entries.length ?? 0;
-            const autoPoints = sub?.entries.reduce(
-              (s, e) => s + (e.autoScore ?? 0),
-              0,
-            );
-            const manualPoints = sub?.entries.reduce(
-              (s, e) => s + (e.manualScore ?? 0),
+            const totalPoints = sub?.entries.reduce(
+              (s, e) => s + effectiveScore(e),
               0,
             );
             const graded = sub?.entries.some((e) => e.manualScore !== null);
@@ -88,7 +85,7 @@ export default async function StudentPage() {
               status = `в работе · отвечено ${answered} из ${total}`;
               statusClass = "text-[#8f6a25]";
             } else if (graded) {
-              status = `проверено ✓ · баллы: ${(autoPoints ?? 0) + (manualPoints ?? 0)}`;
+              status = `проверено ✓ · баллы: ${totalPoints ?? 0}`;
               statusClass = "text-[#4d7a3a]";
             } else {
               status = "сдано · ждёт проверки";

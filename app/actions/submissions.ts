@@ -155,7 +155,9 @@ export async function finishSubmission(
   return { ok: true };
 }
 
-/** Репетитор ставит балл и комментарий за задачу. */
+/** Репетитор ставит балл и комментарий за задачу — для DETAILED это
+ * основная оценка, для SHORT это переопределение автопроверки (пустое
+ * значение — «доверять автопроверке», сбрасывает переопределение). */
 export async function gradeEntry(
   _prev: FormState,
   formData: FormData,
@@ -165,20 +167,28 @@ export async function gradeEntry(
   const scoreRaw = String(formData.get("manualScore") ?? "").trim();
   const comment = String(formData.get("comment") ?? "").trim() || null;
 
-  const score = scoreRaw === "" ? null : Number(scoreRaw);
-  if (score !== null && (!Number.isInteger(score) || score < 0 || score > 99)) {
-    return { error: "Балл — целое число от 0 до 99." };
-  }
-
   // Изоляция: запись должна принадлежать работе ученика этого репетитора
   const entry = await prisma.answerEntry.findFirst({
     where: {
       id: entryId,
       submission: { assignment: { tutorId: session.user.id } },
     },
-    include: { submission: { select: { assignmentId: true } } },
+    include: { task: { select: { answerType: true } } },
   });
   if (!entry) return { error: "Ответ не найден." };
+
+  const isShort = entry.task.answerType === "SHORT";
+  const score = scoreRaw === "" ? null : Number(scoreRaw);
+  if (score !== null) {
+    const max = isShort ? 1 : 99;
+    if (!Number.isInteger(score) || score < 0 || score > max) {
+      return {
+        error: isShort
+          ? "Отметьте «Верно» или «Неверно»."
+          : "Балл — целое число от 0 до 99.",
+      };
+    }
+  }
 
   await prisma.answerEntry.update({
     where: { id: entry.id },

@@ -5,6 +5,7 @@ import { requireTutor } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { MathText } from "@/components/math-text";
+import { effectiveScore } from "@/lib/answers";
 import { GradeForm } from "./grade-form";
 
 export const metadata: Metadata = { title: "Проверка работы" };
@@ -37,11 +38,28 @@ export default async function ReviewPage({
   if (!submission) notFound();
 
   const entryByTask = new Map(submission.entries.map((e) => [e.taskId, e]));
-  const autoPoints = submission.entries.reduce((s, e) => s + (e.autoScore ?? 0), 0);
-  const manualPoints = submission.entries.reduce((s, e) => s + (e.manualScore ?? 0), 0);
-  const shortTotal = submission.assignment.worksheet.tasks.filter(
-    (t) => t.task.answerType === "SHORT",
-  ).length;
+
+  // Считаем короткие и развёрнутые раздельно (как раньше), но балл каждой
+  // записи — через effectiveScore, иначе переопределённый короткий ответ
+  // задвоился бы (и как autoScore, и как manualScore).
+  let shortCorrect = 0;
+  let shortTotal = 0;
+  let detailedPoints = 0;
+  let detailedGraded = 0;
+  let detailedTotal = 0;
+  for (const wt of submission.assignment.worksheet.tasks) {
+    const entry = entryByTask.get(wt.taskId);
+    if (wt.task.answerType === "SHORT") {
+      shortTotal++;
+      if (entry && effectiveScore(entry) === 1) shortCorrect++;
+    } else {
+      detailedTotal++;
+      if (entry?.manualScore !== null && entry?.manualScore !== undefined) {
+        detailedGraded++;
+        detailedPoints += entry.manualScore;
+      }
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl px-5 pb-16">
@@ -62,7 +80,8 @@ export default async function ReviewPage({
               timeStyle: "short",
             })
           : "— ещё в работе"}{" "}
-        · Автопроверка: {autoPoints}/{shortTotal} · Ваши баллы: {manualPoints}
+        · Короткие: {shortCorrect}/{shortTotal} · Развёрнутые: {detailedPoints} б. за{" "}
+        {detailedGraded}/{detailedTotal}
       </p>
 
       <ol className="space-y-6">
@@ -112,15 +131,30 @@ export default async function ReviewPage({
                       </div>
                     )}
                     {isShort ? (
-                      entry.autoScore === 1 ? (
-                        <p className="font-semibold text-[#4d7a3a]">
-                          Автопроверка: верно ✓
+                      <div className="space-y-2">
+                        <p
+                          className={
+                            entry.autoScore === 1
+                              ? "font-semibold text-[#4d7a3a]"
+                              : "font-semibold text-[#8f3a25]"
+                          }
+                        >
+                          Автопроверка: {entry.autoScore === 1 ? "верно ✓" : "неверно ✗"}
                         </p>
-                      ) : (
-                        <p className="font-semibold text-[#8f3a25]">
-                          Автопроверка: неверно ✗
-                        </p>
-                      )
+                        {entry.manualScore !== null &&
+                          entry.manualScore !== entry.autoScore && (
+                            <p className="font-semibold text-[#8f6a25]">
+                              Переопределено вручную:{" "}
+                              {entry.manualScore === 1 ? "верно ✓" : "неверно ✗"}
+                            </p>
+                          )}
+                        <GradeForm
+                          entryId={entry.id}
+                          initialScore={entry.manualScore}
+                          initialComment={entry.comment}
+                          mode="binary"
+                        />
+                      </div>
                     ) : (
                       <GradeForm
                         entryId={entry.id}
