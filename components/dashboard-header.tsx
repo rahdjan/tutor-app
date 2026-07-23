@@ -20,31 +20,29 @@ export function DashboardHeader({
 }) {
   const subjectLabel = subject && subject in SUBJECT_LABELS ? SUBJECT_LABELS[subject as Subject] : null;
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 py-5">
-      <div className="flex items-center gap-6">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          Репетитор<span className="font-serif italic font-medium">.Платформа</span>
-        </Link>
-        {tutorNav && (
-          <nav className="flex items-center gap-4 text-sm font-semibold">
-            <Link href="/tutor" className="hover:underline">
-              Ученики
-            </Link>
-            <Link href="/tutor/tasks" className="hover:underline">
-              Банк задач
-            </Link>
-            <Link href="/tutor/worksheets" className="hover:underline">
-              Листы
-            </Link>
-            <Link href="/tutor/review" className="hover:underline">
-              Проверка
-            </Link>
-            <Link href="/tutor/schedule" className="hover:underline">
-              Расписание
-            </Link>
-          </nav>
-        )}
-      </div>
+    <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-5">
+      <Link href="/" className="text-lg font-bold tracking-tight">
+        Репетитор<span className="font-serif italic font-medium">.Платформа</span>
+      </Link>
+      {tutorNav && (
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
+          <Link href="/tutor" className="hover:underline">
+            Ученики
+          </Link>
+          <Link href="/tutor/tasks" className="hover:underline">
+            Банк задач
+          </Link>
+          <Link href="/tutor/worksheets" className="hover:underline">
+            Листы
+          </Link>
+          <Link href="/tutor/review" className="hover:underline">
+            Проверка
+          </Link>
+          <Link href="/tutor/schedule" className="hover:underline">
+            Расписание
+          </Link>
+        </nav>
+      )}
       <div className="flex items-center gap-3">
         {subjectLabel && (
           <span className="hidden rounded-full border-[1.5px] border-ink/20 px-2.5 py-0.5 text-xs font-semibold text-muted sm:inline">

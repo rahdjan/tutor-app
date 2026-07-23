@@ -268,10 +268,10 @@ export function AssignForm({
           <label className="field-label">Срок сдачи</label>
           <input name="dueAt" type="date" className="input" />
         </div>
-        <button type="submit" disabled={pending} className="btn-pill bg-butter disabled:opacity-60">
-          {pending ? "Выдаём…" : "Выдать"}
-        </button>
       </div>
+      <button type="submit" disabled={pending} className="btn-pill bg-butter disabled:opacity-60">
+        {pending ? "Выдаём…" : "Выдать"}
+      </button>
       <ErrorNote text={state.error} />
       <OkNote show={state.ok} text="Выдано ✓ Ученик увидит задание в своём кабинете." />
     </form>
